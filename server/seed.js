@@ -15,7 +15,17 @@ const dummyIssues = [
     status: 'open',
     latitude: 37.7739,
     longitude: -122.4184,
-    images: ['/images/water_leak.png']
+    images: ['/images/water_leakage_street.png']
+  },
+  {
+    title: 'Broken Public Handpump Causing Water Inaccessibility',
+    description: 'The main community handpump has been completely broken. The handle is detached, and the body is severely rusted. Residents who rely on this pump for their daily water supply are facing extreme hardships.',
+    category: 'water',
+    location: 'Near Community Center, Sector 4',
+    status: 'open',
+    latitude: 37.7658,
+    longitude: -122.4201,
+    images: ['/images/broken_handpump.png']
   },
   {
     title: 'Low Water Pressure & Rusty Discoloration in Residential Supply',
@@ -102,6 +112,16 @@ const dummyIssues = [
     images: ['/images/exposed_wires.png']
   },
   {
+    title: 'Fallen High-Voltage Electricity Wires on Main Road',
+    description: 'Thick high-voltage overhead power lines have snapped and fallen directly onto the busy asphalt road. The live wires are laying on the street, posing an extremely lethal hazard for vehicles and pedestrians. Immediate emergency response is required.',
+    category: 'electricity',
+    location: '380 Oakwood Avenue, near Maple Intersection',
+    status: 'open',
+    latitude: 37.7701,
+    longitude: -122.4305,
+    images: ['/images/exposed_wires_road.png']
+  },
+  {
     title: 'Exposed High-Voltage Cable Near Children\'s Playground',
     description: 'A metal utility service hatch door has been broken or stolen, leaving high-voltage wires exposed at the base of the lamppost directly adjacent to the sandbox and children\'s play area. Extreme hazard!',
     category: 'electricity',
@@ -119,7 +139,7 @@ const dummyIssues = [
     status: 'in_progress',
     latitude: 37.7621,
     longitude: -122.4502,
-    images: ['/images/exposed_wires.png']
+    images: ['/images/damaged_transformer.png']
   },
   {
     title: 'Leaning Utility Pole After Minor Vehicle Collision',
