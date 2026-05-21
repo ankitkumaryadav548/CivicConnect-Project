@@ -32,8 +32,8 @@ exports.addComment = async (req, res) => {
 
     let comment = await Comment.create(req.body);
     
-    // populate user info so frontend can display immediately
-    comment = await comment.populate('userId', 'name');
+    // populate user info so frontend can display immediately by querying freshly
+    comment = await Comment.findById(comment._id).populate('userId', 'name');
 
     res.status(201).json({ success: true, data: comment });
   } catch (error) {
@@ -53,7 +53,7 @@ exports.deleteComment = async (req, res) => {
     }
 
     // Make sure user is comment owner or admin
-    if (comment.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (!comment.userId || (comment.userId.toString() !== req.user.id && req.user.role !== 'admin')) {
       return res.status(401).json({ success: false, error: 'Not authorized to delete this comment' });
     }
 

@@ -624,18 +624,20 @@ const IssueDetail = () => {
               <div key={comment._id} className="flex gap-4 items-start">
                 <div className="flex-shrink-0">
                   <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white font-extrabold text-sm shadow-sm">
-                    {comment.userId.name.charAt(0).toUpperCase()}
+                    {comment.userId?.name ? comment.userId.name.charAt(0).toUpperCase() : 'U'}
                   </div>
                 </div>
                 <div className="flex-grow bg-slate-50 border border-slate-100 rounded-2xl p-4">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <span className="font-bold text-slate-800 text-sm">{comment.userId.name}</span>
+                      <span className="font-bold text-slate-800 text-sm">
+                        {comment.userId?.name || 'Anonymous User'}
+                      </span>
                       <span className="text-[10px] text-slate-400 font-semibold ml-2.5">
                         {new Date(comment.createdAt).toLocaleDateString()}
                       </span>
                     </div>
-                    {(user && (user.role === 'admin' || user._id === comment.userId._id)) && (
+                    {(user && (user.role === 'admin' || user._id === comment.userId?._id)) && (
                       <button 
                         onClick={() => handleDeleteComment(comment._id)}
                         className="text-slate-400 hover:text-rose-500 transition-colors p-1 rounded-lg cursor-pointer"
