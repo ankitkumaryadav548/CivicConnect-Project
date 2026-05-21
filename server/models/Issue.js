@@ -42,6 +42,28 @@ const issueSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    history: [
+      {
+        status: {
+          type: String,
+          enum: ['open', 'in_progress', 'resolved', 'closed'],
+          required: true,
+        },
+        comment: {
+          type: String,
+          required: false,
+        },
+        changedBy: {
+          type: mongoose.Schema.ObjectId,
+          ref: 'User',
+          required: true,
+        },
+        changedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     latitude: {
       type: Number,
       required: false,

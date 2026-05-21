@@ -82,7 +82,8 @@ exports.getIssue = async (req, res) => {
   try {
     const issue = await Issue.findById(req.params.id)
       .populate('reportedBy', 'name email')
-      .populate('upvotes', 'name');
+      .populate('upvotes', 'name')
+      .populate('history.changedBy', 'name role');
 
     if (!issue) {
       return res.status(404).json({ success: false, error: 'Issue not found' });
@@ -196,23 +197,81 @@ exports.toggleUpvote = async (req, res) => {
 // @access  Private (Admin Only)
 exports.changeStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, comment } = req.body;
     
     if (!['open', 'in_progress', 'resolved', 'closed'].includes(status)) {
         return res.status(400).json({ success: false, error: 'Invalid status' });
     }
 
-    const issue = await Issue.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true, runValidators: true }
-    );
+    const issue = await Issue.findById(req.params.id);
 
     if (!issue) {
       return res.status(404).json({ success: false, error: 'Issue not found' });
     }
 
-    res.status(200).json({ success: true, data: issue });
+    issue.status = status;
+    issue.history.push({
+      status,
+      comment: comment || `Status updated to ${status.replace('_', ' ')}`,
+      changedBy: req.user.id,
+      changedAt: new Date()
+    });
+
+    await issue.save();
+
+    const populatedIssue = await Issue.findById(issue._id)
+      .populate('reportedBy', 'name email')
+      .populate('history.changedBy', 'name role')
+      .populate('upvotes', 'name');
+
+    res.status(200).json({ success: true, data: populatedIssue });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
+
+// @desc    Get aggregated community issues analytics
+// @route   GET /api/issues/analytics
+// @access  Public
+exports.getAnalytics = async (req, res) => {
+  try {
+    // 1. Group by Category
+    const categoryData = await Issue.aggregate([
+      { $group: { _id: "$category", count: { $sum: 1 } } }
+    ]);
+
+    // 2. Group by Status
+    const statusData = await Issue.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } }
+    ]);
+
+    // 3. Issue reports over time (last 30 days)
+    const reportsOverTime = await Issue.aggregate([
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } },
+      { $limit: 30 }
+    ]);
+
+    // 4. Category Upvote Aggregation
+    const upvoteData = await Issue.aggregate([
+      { $project: { category: 1, upvotesCount: { $size: "$upvotes" } } },
+      { $group: { _id: "$category", totalUpvotes: { $sum: "$upvotesCount" } } }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        categoryData,
+        statusData,
+        reportsOverTime,
+        upvoteData
+      }
+    });
   } catch (error) {
     res.status(400).json({ success: false, error: error.message });
   }

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axios';
 import { useAuth } from '../hooks/useAuth';
-import { MapPin, Clock, ThumbsUp, Trash2, ArrowLeft, Send, MessageSquare, Navigation, Copy, RotateCcw, Layers } from 'lucide-react';
+import { MapPin, Clock, ThumbsUp, Trash2, ArrowLeft, Send, MessageSquare, Navigation, Copy, RotateCcw, Layers, Lock, Wrench, CheckCircle } from 'lucide-react';
 import { StatusBadge, CategoryBadge } from '../components/Badges';
 import toast from 'react-hot-toast';
 import { IssueCardSkeleton } from '../components/Skeleton';
@@ -289,9 +289,14 @@ const IssueDetail = () => {
 
   const handleStatusChange = async (newStatus) => {
     try {
-      const res = await axiosInstance.patch(`/issues/${id}/status`, { status: newStatus });
-      setIssue({ ...issue, status: res.data.data.status });
-      toast.success('Status updated');
+      const comment = window.prompt(`Enter optional resolution notes/comments for status "${newStatus.replace('_', ' ')}":`);
+      
+      const res = await axiosInstance.patch(`/issues/${id}/status`, { 
+        status: newStatus,
+        comment: comment || undefined
+      });
+      setIssue(res.data.data);
+      toast.success('Status updated successfully');
     } catch (error) {
       toast.error('Failed to update status');
     }
@@ -385,6 +390,74 @@ const IssueDetail = () => {
                   </div>
                 </div>
               )}
+
+              {/* Resolution Progress Timeline */}
+              <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-6 flex items-center gap-1.5">
+                  ⏱️ Resolution Progress Timeline
+                </h3>
+                
+                <div className="relative border-l border-slate-200 ml-3 pl-6 space-y-6">
+                  {/* Step 1: Issue Reported */}
+                  <div className="relative animate-fade-in">
+                    <div className="absolute -left-[31px] top-0.5 bg-blue-500 text-white rounded-full p-1.5 shadow-md flex items-center justify-center">
+                      <Clock size={12} className="text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-slate-800 uppercase tracking-wide">Issue Reported</h4>
+                      <p className="text-slate-400 text-[10px] font-semibold mt-0.5">
+                        {new Date(issue.createdAt).toLocaleString(undefined, {
+                          dateStyle: 'medium',
+                          timeStyle: 'short'
+                        })}
+                      </p>
+                      <p className="text-slate-600 text-xs mt-1.5 leading-relaxed bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                        Reported by <strong className="text-slate-700">{issue.reportedBy.name}</strong>.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Dynamic Status Updates */}
+                  {issue.history && issue.history.map((hist, index) => {
+                    let iconBg = 'bg-blue-500';
+                    let statusLabel = hist.status.replace('_', ' ');
+                    let IconComponent = Clock;
+
+                    if (hist.status === 'in_progress') {
+                      iconBg = 'bg-amber-500';
+                      IconComponent = Wrench;
+                    } else if (hist.status === 'resolved') {
+                      iconBg = 'bg-emerald-500';
+                      IconComponent = CheckCircle;
+                    } else if (hist.status === 'closed') {
+                      iconBg = 'bg-rose-500';
+                      IconComponent = Lock;
+                    }
+
+                    return (
+                      <div key={hist._id || index} className="relative animate-fade-in">
+                        <div className={`absolute -left-[31px] top-0.5 ${iconBg} text-white rounded-full p-1.5 shadow-md flex items-center justify-center`}>
+                          <IconComponent size={12} className="text-white" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black text-slate-800 uppercase tracking-wide">
+                            {statusLabel}
+                          </h4>
+                          <p className="text-slate-400 text-[10px] font-semibold mt-0.5">
+                            {new Date(hist.changedAt).toLocaleString(undefined, {
+                              dateStyle: 'medium',
+                              timeStyle: 'short'
+                            })} by <strong className="text-slate-500">{hist.changedBy?.name || 'Municipal Officer'}</strong> ({hist.changedBy?.role || 'Officer'})
+                          </p>
+                          <p className="text-slate-600 text-xs mt-1.5 leading-relaxed bg-white p-3 rounded-xl border border-slate-100 shadow-sm font-medium italic">
+                            "{hist.comment}"
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             {/* Right 1 Col: Mini Map & Location sidebar card */}

@@ -14,6 +14,7 @@ import ReportIssue from './pages/ReportIssue';
 import IssueDetail from './pages/IssueDetail';
 import MyIssues from './pages/MyIssues';
 import AdminDashboard from './pages/AdminDashboard';
+import Analytics from './pages/Analytics';
 import { useAuth } from './hooks/useAuth';
 
 // Protected Route Wrapper
@@ -45,6 +46,11 @@ const App = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/issue/:id" element={<IssueDetail />} />
+              <Route path="/analytics" element={
+                <ProtectedRoute adminOnly={true}>
+                  <Analytics />
+                </ProtectedRoute>
+              } />
               
               <Route path="/report" element={
                 <ProtectedRoute>

@@ -7,6 +7,7 @@ const {
   deleteIssue,
   toggleUpvote,
   changeStatus,
+  getAnalytics,
 } = require('../controllers/issueController');
 
 // We also need comments route to re-route into comment router
@@ -24,6 +25,8 @@ router
   .route('/')
   .get(getIssues)
   .post(protect, upload.array('images', 3), createIssue);
+
+router.route('/analytics').get(getAnalytics);
 
 router
   .route('/:id')

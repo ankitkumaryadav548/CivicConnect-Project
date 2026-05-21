@@ -96,3 +96,15 @@ exports.getMe = async (req, res) => {
     res.status(400).json({ success: false, error: error.message });
   }
 };
+
+// @desc    Get all users (Admin only)
+// @route   GET /api/auth/users
+// @access  Private/Admin
+exports.getUsers = async (req, res) => {
+  try {
+    const users = await User.find({}).sort('-createdAt');
+    res.status(200).json({ success: true, count: users.length, users });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};

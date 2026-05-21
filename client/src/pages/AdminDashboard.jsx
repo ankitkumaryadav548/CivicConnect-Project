@@ -5,11 +5,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { StatusBadge, CategoryBadge } from '../components/Badges';
 import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
-import { BarChart3, ListFilter, Trash2, ShieldAlert, Award, FileText, CheckCircle, Hourglass, Circle, ArrowUpRight } from 'lucide-react';
+import { BarChart3, ListFilter, Trash2, ShieldAlert, Award, FileText, CheckCircle, Hourglass, Circle, ArrowUpRight, Users, ShieldCheck, Mail, Calendar } from 'lucide-react';
 
 const AdminDashboard = () => {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(true);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -19,6 +21,7 @@ const AdminDashboard = () => {
       return;
     }
     fetchIssues();
+    fetchUsers();
   }, [user, navigate]);
 
   const fetchIssues = async () => {
@@ -30,6 +33,18 @@ const AdminDashboard = () => {
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const res = await axiosInstance.get('/auth/users');
+      setUsers(res.data.users);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Failed to load user directory');
+    } finally {
+      setUsersLoading(false);
     }
   };
 
@@ -272,6 +287,86 @@ const AdminDashboard = () => {
           </table>
           {issues.length === 0 && (
             <div className="text-center py-12 text-slate-400 text-xs font-semibold">🔍 No civic reports found in database log.</div>
+          )}
+        </div>
+      </div>
+
+      {/* User Accounts Directory */}
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden mt-10">
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center gap-2">
+          <div className="flex items-center gap-2">
+            <Users size={18} className="text-indigo-600" />
+            <h3 className="text-base font-bold text-slate-800">Registered User Accounts</h3>
+          </div>
+          <span className="px-2.5 py-1 rounded-full bg-slate-50 border border-slate-100 text-xs font-bold text-slate-600">
+            {users.length} Total Users
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          {usersLoading ? (
+            <div className="text-center py-12 text-slate-400 text-xs font-semibold">Loading user directory...</div>
+          ) : (
+            <table className="min-w-full divide-y divide-slate-100">
+              <thead className="bg-slate-50/80">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">User Profile</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Email Address</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Assigned Role</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Registration Date</th>
+                  <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-slate-100">
+                {users.map((item) => {
+                  const initials = item.name ? item.name.substring(0, 2).toUpperCase() : 'U';
+                  const isAdmin = item.role === 'admin';
+                  return (
+                    <tr key={item._id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className={`h-8 w-8 rounded-xl bg-gradient-to-br ${isAdmin ? 'from-amber-400 to-orange-500 shadow-amber-100' : 'from-indigo-400 to-violet-500 shadow-indigo-100'} flex items-center justify-center text-white font-extrabold text-xs shadow-sm`}>
+                            {initials}
+                          </div>
+                          <span className="text-sm font-bold text-slate-800">{item.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-xs font-semibold text-slate-500">
+                        <div className="flex items-center gap-1.5">
+                          <Mail size={13} className="text-slate-400" />
+                          <span>{item.email}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {isAdmin ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-[10px] font-bold text-amber-700">
+                            <ShieldCheck size={11} className="text-amber-500" /> Admin
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-violet-50 border border-violet-200 text-[10px] font-bold text-violet-700">
+                            <Users size={11} className="text-violet-500" /> Citizen
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-xs font-semibold text-slate-500">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar size={13} className="text-slate-400" />
+                          <span>{new Date(item.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span className="inline-flex items-center gap-1">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                          <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide">Active</span>
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+          {!usersLoading && users.length === 0 && (
+            <div className="text-center py-12 text-slate-400 text-xs font-semibold">🔍 No users registered in system directory.</div>
           )}
         </div>
       </div>
