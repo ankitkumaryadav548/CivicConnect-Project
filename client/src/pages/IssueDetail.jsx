@@ -593,30 +593,49 @@ const IssueDetail = () => {
           </div>
           
           {/* Post custom comment form */}
-          <form onSubmit={handleAddComment} className="mb-8">
-            <div className="flex gap-4">
-              <div className="flex-grow">
-                <textarea
-                  rows="3"
-                  className="block w-full border-slate-200 bg-slate-50 text-slate-800 rounded-2xl shadow-sm sm:text-sm px-4 py-3 placeholder-slate-400 focus:bg-white resize-none"
-                  placeholder={user ? "Add helpful info or updates regarding this issue..." : "Login to participate in community discussions..."}
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  disabled={!user}
-                ></textarea>
+          {!user ? (
+            <div className="bg-slate-50/50 border border-slate-100 rounded-3xl p-6 md:p-8 text-center flex flex-col items-center justify-center gap-4 mb-8">
+              <div className="h-12 w-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100/50">
+                <Lock size={20} className="animate-pulse" />
               </div>
-            </div>
-            <div className="mt-3.5 flex justify-end">
+              <div>
+                <h4 className="text-base font-bold text-slate-800">Join the discussion</h4>
+                <p className="text-xs text-slate-500 max-w-sm mt-1">
+                  You need to be signed in to ask questions, share updates, or comment on community issues.
+                </p>
+              </div>
               <button
-                type="submit"
-                disabled={submittingComment || !user || !newComment.trim()}
-                className={`inline-flex items-center gap-1.5 justify-center py-2 px-4 border border-transparent shadow-md text-xs font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer transition-colors ${(!user || !newComment.trim() || submittingComment) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={() => navigate('/login', { state: { from: window.location.pathname } })}
+                className="inline-flex items-center gap-1.5 justify-center py-2.5 px-6 border border-transparent shadow-md text-xs font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer transition-all duration-300 transform hover:-translate-y-0.5"
               >
-                <Send size={13} />
-                <span>{submittingComment ? 'Posting...' : 'Post Comment'}</span>
+                Sign In to Participate
               </button>
             </div>
-          </form>
+          ) : (
+            <form onSubmit={handleAddComment} className="mb-8">
+              <div className="flex gap-4">
+                <div className="flex-grow">
+                  <textarea
+                    rows="3"
+                    className="block w-full border-slate-200 bg-slate-50 text-slate-800 rounded-2xl shadow-sm sm:text-sm px-4 py-3 placeholder-slate-400 focus:bg-white resize-none"
+                    placeholder="Add helpful info or updates regarding this issue..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                  ></textarea>
+                </div>
+              </div>
+              <div className="mt-3.5 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={submittingComment || !newComment.trim()}
+                  className={`inline-flex items-center gap-1.5 justify-center py-2 px-4 border border-transparent shadow-md text-xs font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer transition-colors ${(!newComment.trim() || submittingComment) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <Send size={13} />
+                  <span>{submittingComment ? 'Posting...' : 'Post Comment'}</span>
+                </button>
+              </div>
+            </form>
+          )}
 
           {/* List of comment elements */}
           <div className="space-y-6">

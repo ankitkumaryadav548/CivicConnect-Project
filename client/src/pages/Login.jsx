@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
 import axiosInstance from '../api/axios';
@@ -12,6 +12,7 @@ const Login = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,7 +29,9 @@ const Login = () => {
 
       await login(email, password);
       toast.success(isAdmin ? 'Logged in as Administrator' : 'Logged in successfully');
-      navigate('/');
+      
+      const from = location.state?.from || '/';
+      navigate(from);
     } catch (error) {
       toast.error(error.response?.data?.error || 'Login failed');
     } finally {

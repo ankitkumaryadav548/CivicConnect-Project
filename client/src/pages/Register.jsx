@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
 import { Mail, Lock, User, UserPlus, ArrowRight } from 'lucide-react';
@@ -11,6 +11,7 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,7 +19,9 @@ const Register = () => {
     try {
       await register(name, email, password);
       toast.success('Account created successfully');
-      navigate('/');
+      
+      const from = location.state?.from || '/';
+      navigate(from);
     } catch (error) {
       toast.error(error.response?.data?.error || 'Registration failed');
     } finally {
