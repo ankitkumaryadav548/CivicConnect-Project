@@ -90,10 +90,8 @@ const MapDashboard = ({ issues = [] }) => {
         position: 'bottomright'
       }).addTo(mapInstanceRef.current);
 
-      // Voyager map tiles look gorgeous and modern
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
-        subdomains: 'abcd',
+      L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        attribution: '',
         maxZoom: 20
       }).addTo(mapInstanceRef.current);
 

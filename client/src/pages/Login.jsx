@@ -52,24 +52,24 @@ const Login = () => {
       <div className="absolute bottom-1/4 right-1/3 w-96 h-96 rounded-full bg-violet-500/10 blur-3xl -z-10"></div>
 
       <div 
-        className={`max-w-md w-full space-y-8 glass p-8 md:p-10 rounded-3xl shadow-2xl transition-all duration-500 ${
+        className={`max-w-md w-full space-y-8 glass p-8 md:p-10 rounded-3xl shadow-2xl transition-all duration-500 dark:bg-slate-900/90 ${
           isAdmin 
-            ? 'border-amber-200/60 shadow-amber-100/30' 
-            : 'border-slate-200/50 shadow-indigo-100/30'
+            ? 'border-amber-200/60 dark:border-amber-900/60 shadow-amber-100/30 dark:shadow-amber-950/20' 
+            : 'border-slate-200/50 dark:border-slate-800 shadow-indigo-100/30 dark:shadow-indigo-950/20'
         }`}
       >
         <div className="text-center">
-          <div className="mx-auto h-16 w-16 rounded-2xl flex items-center justify-center shadow-lg mb-5 transition-transform duration-300 hover:scale-105 bg-white">
+          <div className="mx-auto h-16 w-16 rounded-2xl flex items-center justify-center shadow-lg mb-5 transition-transform duration-300 hover:scale-105 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
             {isAdmin ? (
-              <ShieldCheck size={32} className="text-amber-500" />
+              <ShieldCheck size={32} className="text-amber-500 dark:text-amber-400" />
             ) : (
-              <UserCheck size={32} className="text-indigo-600" />
+              <UserCheck size={32} className="text-indigo-600 dark:text-indigo-400" />
             )}
           </div>
-          <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">
+          <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">
             {isAdmin ? 'Municipal Dashboard' : 'Welcome back'}
           </h2>
-          <p className="mt-2 text-xs font-semibold text-slate-400">
+          <p className="mt-2 text-xs font-semibold text-slate-400 dark:text-slate-500">
             {isAdmin ? 'Administrator Authentication Portal' : 'Sign in to access your CivicConnect reports'}
           </p>
         </div>
@@ -77,11 +77,11 @@ const Login = () => {
         <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="email-address" className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+              <label htmlFor="email-address" className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
                 {isAdmin ? 'Admin Email Address' : 'Email Address'}
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                   <Mail size={16} />
                 </div>
                 <input
@@ -90,7 +90,7 @@ const Login = () => {
                   type="email"
                   required
                   autoComplete="off"
-                  className="block w-full pl-10 pr-3 py-2.5 bg-white border border-slate-200 text-slate-800 rounded-xl sm:text-sm placeholder-slate-400"
+                  className="block w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl sm:text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
                   placeholder="Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -99,11 +99,11 @@ const Login = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+              <label htmlFor="password" className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                   <Lock size={16} />
                 </div>
                 <input
@@ -112,7 +112,7 @@ const Login = () => {
                   type="password"
                   required
                   autoComplete="off"
-                  className="block w-full pl-10 pr-3 py-2.5 bg-white border border-slate-200 text-slate-800 rounded-xl sm:text-sm placeholder-slate-400"
+                  className="block w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl sm:text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -143,8 +143,8 @@ const Login = () => {
               disabled={loading}
               className={`w-full flex items-center justify-center gap-1.5 py-2.5 px-4 border text-xs font-bold rounded-xl cursor-pointer shadow-sm transition-all duration-300 transform active:scale-[0.98] ${
                 isAdmin 
-                  ? 'border-slate-200 text-slate-600 bg-white hover:bg-indigo-50/30 hover:border-indigo-200 hover:text-indigo-600'
-                  : 'border-slate-200 text-slate-600 bg-white hover:bg-amber-50/30 hover:border-amber-200 hover:text-amber-600'
+                  ? 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/30 hover:border-indigo-200 dark:hover:border-indigo-800 hover:text-indigo-600 dark:hover:text-indigo-400'
+                  : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-amber-50/30 dark:hover:bg-amber-950/30 hover:border-amber-200 dark:hover:border-amber-800 hover:text-amber-600 dark:hover:text-amber-400'
               }`}
             >
               {isAdmin ? (
@@ -163,10 +163,10 @@ const Login = () => {
         </form>
 
         {!isAdmin && (
-          <div className="text-center mt-6 pt-4 border-t border-slate-100">
-            <p className="text-xs text-slate-500 font-semibold">
+          <div className="text-center mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
               Don't have an account?{' '}
-              <Link to="/register" className="font-bold text-indigo-600 hover:text-indigo-700 transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:w-0 hover:after:w-full after:bg-indigo-600 after:transition-all after:duration-300">
+              <Link to="/register" className="font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:w-0 hover:after:w-full after:bg-indigo-600 after:transition-all after:duration-300">
                 Create a Free Account
               </Link>
             </p>

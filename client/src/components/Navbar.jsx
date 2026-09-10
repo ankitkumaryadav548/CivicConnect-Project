@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { LogOut, PlusCircle, LayoutDashboard, User as UserIcon, ShieldAlert, LogIn, ArrowRight, BarChart3, MessageSquare } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { LogOut, PlusCircle, LayoutDashboard, User as UserIcon, ShieldAlert, LogIn, ArrowRight, BarChart3, MessageSquare, Sun, Moon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { createPortal } from 'react-dom';
 
@@ -50,6 +51,7 @@ const themeAccents = {
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -135,28 +137,42 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 glass border-b border-slate-200/50 shadow-sm">
+    <nav className="sticky top-0 z-50 glass border-b border-slate-200/50 dark:border-slate-800/80 shadow-sm transition-colors duration-300 dark:bg-slate-950/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
             <Link to="/" className="flex-shrink-0 flex items-center group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center shadow-md shadow-indigo-200 mr-2.5 transition-transform duration-300 group-hover:scale-105">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center shadow-md shadow-indigo-200 dark:shadow-indigo-900/30 mr-2.5 transition-transform duration-300 group-hover:scale-105">
                 <span className="text-white font-extrabold text-lg">C</span>
               </div>
-              <span className="text-xl font-extrabold bg-gradient-to-r from-slate-900 via-indigo-950 to-violet-950 bg-clip-text text-transparent group-hover:text-indigo-600 transition-colors">
-                Civic<span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Connect</span>
+              <span className="text-xl font-extrabold bg-gradient-to-r from-slate-900 via-indigo-950 to-violet-950 dark:from-white dark:via-indigo-200 dark:to-violet-200 bg-clip-text text-transparent group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                Civic<span className="bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400 bg-clip-text text-transparent">Connect</span>
               </span>
             </Link>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5 sm:space-x-2">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 border border-slate-200/60 dark:border-slate-800 transition-all duration-300 active:scale-95 flex items-center justify-center cursor-pointer mr-1 shadow-sm"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? (
+                <Sun size={18} className="text-amber-400 transition-transform hover:rotate-45 duration-300" />
+              ) : (
+                <Moon size={18} className="text-indigo-600 transition-transform hover:-rotate-12 duration-300" />
+              )}
+            </button>
+
             {user?.role === 'admin' && (
               <Link
                 to="/analytics"
                 className={`px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5 transition-all duration-200 ${
                   isActive('/analytics')
-                    ? 'bg-indigo-50 text-indigo-700'
-                    : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50'
+                    ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-100/50 dark:border-indigo-900/50'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                 }`}
               >
                 <BarChart3 size={16} />
@@ -173,8 +189,8 @@ const Navbar = () => {
                       to="/report"
                       className={`px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5 transition-all duration-200 ${
                         isActive('/report')
-                          ? 'bg-indigo-50 text-indigo-700'
-                          : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50'
+                          ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-100/50 dark:border-indigo-900/50'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                       }`}
                     >
                       <PlusCircle size={16} />
@@ -185,8 +201,8 @@ const Navbar = () => {
                       to="/my-issues"
                       className={`px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5 transition-all duration-200 ${
                         isActive('/my-issues')
-                          ? 'bg-indigo-50 text-indigo-700'
-                          : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50'
+                          ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-100/50 dark:border-indigo-900/50'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                       }`}
                     >
                       <UserIcon size={16} />
@@ -200,8 +216,8 @@ const Navbar = () => {
                     to="/admin"
                     className={`px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5 transition-all duration-200 ${
                       isActive('/admin')
-                        ? 'bg-amber-50 text-amber-700'
-                        : 'text-slate-600 hover:text-amber-600 hover:bg-slate-50'
+                        ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-100/50 dark:border-amber-900/50'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                     }`}
                   >
                     <LayoutDashboard size={16} />
@@ -211,9 +227,9 @@ const Navbar = () => {
 
                 <button
                   onClick={() => setIsContactOpen(true)}
-                  className="px-4 py-2 bg-gradient-to-r from-indigo-50 to-violet-50 hover:from-indigo-100 hover:to-violet-100 border border-indigo-100/50 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all duration-300 text-indigo-700 hover:text-indigo-800 shadow-sm hover:shadow active:scale-95 cursor-pointer relative group"
+                  className="px-3.5 py-2 bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-950/50 dark:to-violet-950/50 hover:from-indigo-100 hover:to-violet-100 dark:hover:from-indigo-900/50 dark:hover:to-violet-900/50 border border-indigo-100/50 dark:border-indigo-800/50 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all duration-300 text-indigo-700 dark:text-indigo-300 hover:text-indigo-800 shadow-sm hover:shadow active:scale-95 cursor-pointer relative group"
                 >
-                  <MessageSquare size={15} className="group-hover:scale-110 group-hover:rotate-6 transition-all text-indigo-600" />
+                  <MessageSquare size={15} className="group-hover:scale-110 group-hover:rotate-6 transition-all text-indigo-600 dark:text-indigo-400" />
                   <span className="hidden sm:inline">Contact Support</span>
                   <span className="sm:hidden">Contact</span>
                   <span className="flex h-2 w-2 relative">
@@ -222,16 +238,16 @@ const Navbar = () => {
                   </span>
                 </button>
 
-                <div className="h-5 w-[1px] bg-slate-200 mx-2"></div>
+                <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1.5 sm:mx-2"></div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                   {user.role === 'admin' ? (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-200/60 text-xs font-bold text-amber-700 shadow-sm">
-                      <ShieldAlert size={13} className="text-amber-600" />
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 dark:bg-amber-950/60 border border-amber-200/60 dark:border-amber-800/60 text-xs font-bold text-amber-700 dark:text-amber-300 shadow-sm">
+                      <ShieldAlert size={13} className="text-amber-600 dark:text-amber-400" />
                       <span>Admin</span>
                     </div>
                   ) : (
-                    <span className="hidden sm:inline text-xs font-semibold text-slate-500">
+                    <span className="hidden sm:inline text-xs font-semibold text-slate-500 dark:text-slate-400">
                       {user.name}
                     </span>
                   )}
@@ -242,7 +258,7 @@ const Navbar = () => {
                   
                   <button
                     onClick={handleLogout}
-                    className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all duration-200"
+                    className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-all duration-200"
                     title="Logout"
                   >
                     <LogOut size={18} />
@@ -253,9 +269,9 @@ const Navbar = () => {
               <>
                 <button
                   onClick={() => setIsContactOpen(true)}
-                  className="px-4 py-2 bg-gradient-to-r from-indigo-50 to-violet-50 hover:from-indigo-100 hover:to-violet-100 border border-indigo-100/50 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all duration-300 text-indigo-700 hover:text-indigo-800 shadow-sm hover:shadow active:scale-95 cursor-pointer mr-1 relative group"
+                  className="px-3.5 py-2 bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-950/50 dark:to-violet-950/50 hover:from-indigo-100 hover:to-violet-100 dark:hover:from-indigo-900/50 dark:hover:to-violet-900/50 border border-indigo-100/50 dark:border-indigo-800/50 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all duration-300 text-indigo-700 dark:text-indigo-300 hover:text-indigo-800 shadow-sm hover:shadow active:scale-95 cursor-pointer mr-1 relative group"
                 >
-                  <MessageSquare size={15} className="group-hover:scale-110 group-hover:rotate-6 transition-all text-indigo-600" />
+                  <MessageSquare size={15} className="group-hover:scale-110 group-hover:rotate-6 transition-all text-indigo-600 dark:text-indigo-400" />
                   <span>Contact</span>
                   <span className="flex h-2 w-2 relative">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -264,14 +280,14 @@ const Navbar = () => {
                 </button>
                 <Link
                   to="/login"
-                  className="group px-4 py-2.5 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/50 rounded-xl text-sm font-bold transition-all duration-300 transform active:scale-95 flex items-center gap-1.5"
+                  className="group px-3.5 py-2 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/40 rounded-xl text-sm font-bold transition-all duration-300 transform active:scale-95 flex items-center gap-1.5"
                 >
-                  <LogIn size={15} className="transition-transform duration-300 text-slate-400 group-hover:text-indigo-600" />
+                  <LogIn size={15} className="transition-transform duration-300 text-slate-400 dark:text-slate-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" />
                   <span>Login</span>
                 </Link>
                 <Link
                   to="/register"
-                  className="group relative bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white px-4.5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-600/10 hover:shadow-xl hover:shadow-indigo-600/25 transition-all duration-300 transform hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-1.5"
+                  className="group relative bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md shadow-indigo-600/10 hover:shadow-xl hover:shadow-indigo-600/25 transition-all duration-300 transform hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-1.5"
                 >
                   <span>Sign Up</span>
                   <ArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-0.5" />
@@ -293,30 +309,30 @@ const Navbar = () => {
           <div className={`absolute top-1/4 left-1/4 w-96 h-96 rounded-full ${currentAccent.glow} blur-3xl transition-colors duration-500 z-0`}></div>
           <div className={`absolute bottom-10 right-1/4 w-96 h-96 rounded-full ${currentAccent.glow} blur-3xl transition-colors duration-500 z-0`}></div>
 
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-2xl p-6 md:p-8 w-full max-w-lg relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10 my-8">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl p-6 md:p-8 w-full max-w-lg relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10 my-8 transition-colors duration-300">
             {/* Design header banner decoration with dynamic gradient */}
             <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${currentAccent.gradient} transition-all duration-500`}></div>
 
             <div className="flex justify-between items-start mb-5">
               <div className="flex items-center gap-2.5">
-                <div className={`w-9 h-9 rounded-xl ${currentAccent.lightBg} border ${currentAccent.border} ${currentAccent.text} flex items-center justify-center shadow-sm transition-colors duration-500`}>
+                <div className={`w-9 h-9 rounded-xl ${currentAccent.lightBg} dark:bg-slate-800 border ${currentAccent.border} dark:border-slate-700 ${currentAccent.text} flex items-center justify-center shadow-sm transition-colors duration-500`}>
                   <MessageSquare size={18} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800">Support Workspace</h3>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Municipal Coordination Console</p>
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Support Workspace</h3>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mt-0.5">Municipal Coordination Console</p>
                 </div>
               </div>
               <button 
                 onClick={() => setIsContactOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer text-sm font-bold font-sans"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer text-sm font-bold font-sans"
               >
                 ✕
               </button>
             </div>
 
             {/* Dynamic Subject Info Box */}
-            <div className={`mb-6 p-4 rounded-2xl ${currentAccent.lightBg} border ${currentAccent.border} text-xs ${currentAccent.text} font-semibold leading-relaxed transition-all duration-500`}>
+            <div className={`mb-6 p-4 rounded-2xl ${currentAccent.lightBg} dark:bg-slate-800/80 border ${currentAccent.border} dark:border-slate-700 text-xs ${currentAccent.text} dark:text-slate-200 font-semibold leading-relaxed transition-all duration-500`}>
               {contactForm.subject === 'General Inquiry' && "📂 Have general feedback, suggestions, or community concerns? Write to us below."}
               {contactForm.subject === 'System Support' && "⚙️ Encountered a portal bug or technical issue? Detail your setup and describe what broke."}
               {contactForm.subject === 'Report Abuse' && "⚠️ Report reports, comments, or issues violating community guidelines. Our safety crew will review."}
@@ -326,89 +342,89 @@ const Navbar = () => {
             <form onSubmit={handleContactSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Your Name *</label>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5">Your Name *</label>
                   <input
                     type="text"
                     required
                     value={contactForm.name}
                     onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
                     placeholder="Enter your name"
-                    className={`block w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 ${currentAccent.ring} transition-all duration-300`}
+                    className={`block w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 ${currentAccent.ring} transition-all duration-300`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Email Address *</label>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5">Email Address *</label>
                   <input
                     type="email"
                     required
                     value={contactForm.email}
                     onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
                     placeholder="Enter email"
-                    className={`block w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 ${currentAccent.ring} transition-all duration-300`}
+                    className={`block w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 ${currentAccent.ring} transition-all duration-300`}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Subject / Topic *</label>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5">Subject / Topic *</label>
                 <select
                   value={contactForm.subject}
                   onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
-                  className={`block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 cursor-pointer focus:outline-none focus:ring-2 ${currentAccent.ring} transition-all duration-300`}
+                  className={`block w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 cursor-pointer focus:outline-none focus:ring-2 ${currentAccent.ring} transition-all duration-300`}
                 >
-                  <option value="General Inquiry">📂 General Inquiry</option>
-                  <option value="System Support">⚙️ Technical Support</option>
-                  <option value="Report Abuse">⚠️ Report Policy Violation</option>
-                  <option value="Partnership Request">🤝 Partnership & Collaboration</option>
+                  <option value="General Inquiry" className="dark:bg-slate-900">📂 General Inquiry</option>
+                  <option value="System Support" className="dark:bg-slate-900">⚙️ Technical Support</option>
+                  <option value="Report Abuse" className="dark:bg-slate-900">⚠️ Report Policy Violation</option>
+                  <option value="Partnership Request" className="dark:bg-slate-900">🤝 Partnership & Collaboration</option>
                 </select>
               </div>
 
               {/* Dynamic Form Field Rendering */}
               {contactForm.subject === 'System Support' && (
                 <div className="animate-in fade-in slide-in-from-top-2 duration-200">
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">System/Device Configuration *</label>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5">System/Device Configuration *</label>
                   <input
                     type="text"
                     required
                     value={contactForm.extraField}
                     onChange={(e) => setContactForm({ ...contactForm, extraField: e.target.value })}
                     placeholder="e.g. Chrome browser on Windows 11, iOS Safari"
-                    className={`block w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 ${currentAccent.ring} transition-all duration-300`}
+                    className={`block w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 ${currentAccent.ring} transition-all duration-300`}
                   />
                 </div>
               )}
 
               {contactForm.subject === 'Report Abuse' && (
                 <div className="animate-in fade-in slide-in-from-top-2 duration-200">
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Violating Item ID / Title *</label>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5">Violating Item ID / Title *</label>
                   <input
                     type="text"
                     required
                     value={contactForm.extraField}
                     onChange={(e) => setContactForm({ ...contactForm, extraField: e.target.value })}
                     placeholder="e.g. Broken transformer report, ID: 64fa829..."
-                    className={`block w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 ${currentAccent.ring} transition-all duration-300`}
+                    className={`block w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 ${currentAccent.ring} transition-all duration-300`}
                   />
                 </div>
               )}
 
               {contactForm.subject === 'Partnership Request' && (
                 <div className="animate-in fade-in slide-in-from-top-2 duration-200">
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Organization / Municipality Name *</label>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5">Organization / Municipality Name *</label>
                   <input
                     type="text"
                     required
                     value={contactForm.extraField}
                     onChange={(e) => setContactForm({ ...contactForm, extraField: e.target.value })}
                     placeholder="e.g. Sector 4 Citizen Council, Municipal Works Corp"
-                    className={`block w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 ${currentAccent.ring} transition-all duration-300`}
+                    className={`block w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 ${currentAccent.ring} transition-all duration-300`}
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Your Message *</label>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5">Your Message *</label>
                 <textarea
                   rows="4"
                   required
@@ -420,7 +436,7 @@ const Navbar = () => {
                     contactForm.subject === 'Report Abuse' ? "Please explain in detail why this community item or comment violates guidelines and safety regulations..." :
                     "How would you like to partner or collaborate with CivicConnect? Detail your proposal..."
                   }
-                  className={`block w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 ${currentAccent.ring} resize-none text-slate-700 transition-all duration-300`}
+                  className={`block w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 ${currentAccent.ring} resize-none transition-all duration-300`}
                 />
               </div>
 
@@ -428,7 +444,7 @@ const Navbar = () => {
                 <button
                   type="button"
                   onClick={() => setIsContactOpen(false)}
-                  className="px-4 py-2.5 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors cursor-pointer"
+                  className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-100 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>

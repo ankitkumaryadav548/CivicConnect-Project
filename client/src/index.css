@@ -1,19 +1,26 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-road: #9333ea;
+  --color-road: #8b5cf6;
   --color-water: #0d9488;
   --color-electricity: #d97706;
-  --color-sanitation: #f97316;
-  --color-other: #6b7280;
+  --color-sanitation: #ea580c;
+  --color-other: #64748b;
   
-  --color-status-open: #3b82f6;
-  --color-status-in-progress: #f59e0b;
-  --color-status-resolved: #10b981;
-  --color-status-closed: #6b7280;
+  --color-status-open: #2563eb;
+  --color-status-in-progress: #d97706;
+  --color-status-resolved: #7c3aed;
+  --color-status-closed: #059669;
 
-  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light dark;
 }
 
 body {
@@ -21,45 +28,82 @@ body {
   color: #0f172a;
   font-family: var(--font-sans);
   background-image: 
-    radial-gradient(at 0% 0%, hsla(243, 98%, 93%, 0.4) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(199, 89%, 93%, 0.4) 0px, transparent 50%);
+    radial-gradient(at 10% 0%, hsla(243, 98%, 95%, 0.6) 0px, transparent 40%),
+    radial-gradient(at 90% 0%, hsla(199, 89%, 95%, 0.6) 0px, transparent 40%),
+    radial-gradient(at 50% 100%, hsla(265, 89%, 96%, 0.4) 0px, transparent 50%);
   background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Glassmorphism helpers */
-.glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+html.dark body {
+  background-color: #090d16;
+  color: #f8fafc;
+  background-image: 
+    radial-gradient(at 10% 0%, hsla(243, 98%, 10%, 0.6) 0px, transparent 40%),
+    radial-gradient(at 90% 0%, hsla(199, 89%, 8%, 0.6) 0px, transparent 40%),
+    radial-gradient(at 50% 100%, hsla(265, 89%, 10%, 0.4) 0px, transparent 50%);
 }
 
-.glass-dark {
-  background: rgba(15, 23, 42, 0.6);
+/* Glassmorphism utility tokens */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(241, 245, 249, 0.9);
+  box-shadow: 0 10px 30px -10px rgba(79, 70, 229, 0.06), 0 4px 12px -4px rgba(0, 0, 0, 0.03);
+}
+
+.glass-card:hover {
+  border-color: rgba(199, 210, 254, 0.8);
+  box-shadow: 0 20px 40px -15px rgba(79, 70, 229, 0.12), 0 8px 16px -6px rgba(0, 0, 0, 0.04);
 }
 
 /* Focus input rings */
 input:focus, textarea:focus, select:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+  border-color: #6366f1 !important;
 }
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(241, 245, 249, 0.6);
 }
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 4px;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Leaflet Popup Enhancements */
+.leaflet-popup-content-wrapper {
+  border-radius: 16px !important;
+  padding: 4px !important;
+  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.2) !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+}
+
+.leaflet-popup-tip {
+  box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.15) !important;
+}
+
+/* Smooth transition defaults */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }

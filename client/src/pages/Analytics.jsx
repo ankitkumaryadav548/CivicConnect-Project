@@ -86,7 +86,7 @@ const Analytics = () => {
   const totalUpvotes = (analyticsData.upvoteData || []).reduce((acc, curr) => acc + curr.totalUpvotes, 0);
 
   return (
-    <div className="pb-16 bg-slate-50/50">
+    <div className="pb-16 bg-slate-50/50 dark:bg-slate-950 transition-colors duration-300">
       {/* Premium Hero Header */}
       <div className="relative bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 text-white py-14 px-4 overflow-hidden border-b border-indigo-900/20">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30"></div>
@@ -111,46 +111,46 @@ const Analytics = () => {
         {/* KPI Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
           {/* Total issues card */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800/80 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
               <BarChart3 size={22} />
             </div>
             <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Reports</p>
-              <h3 className="text-2xl font-black text-slate-800">{totalIssues}</h3>
+              <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Total Reports</p>
+              <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100">{totalIssues}</h3>
             </div>
           </div>
 
           {/* Active issues card */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800/80 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/60 flex items-center justify-center text-amber-600 dark:text-amber-400">
               <Clock size={22} />
             </div>
             <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Active Issues</p>
-              <h3 className="text-2xl font-black text-slate-800">{activeCount}</h3>
+              <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Active Issues</p>
+              <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100">{activeCount}</h3>
             </div>
           </div>
 
           {/* Resolved issues card */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800/80 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
               <ShieldCheck size={22} />
             </div>
             <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Resolved & Closed</p>
-              <h3 className="text-2xl font-black text-slate-800">{resolvedCount + closedCount}</h3>
+              <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Resolved & Closed</p>
+              <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100">{resolvedCount + closedCount}</h3>
             </div>
           </div>
 
           {/* Total upvotes card */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-violet-50 flex items-center justify-center text-violet-600">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800/80 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-violet-50 dark:bg-violet-950/60 flex items-center justify-center text-violet-600 dark:text-violet-400">
               <TrendingUp size={22} />
             </div>
             <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Community Upvotes</p>
-              <h3 className="text-2xl font-black text-slate-800">{totalUpvotes}</h3>
+              <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Community Upvotes</p>
+              <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100">{totalUpvotes}</h3>
             </div>
           </div>
         </div>
@@ -158,12 +158,12 @@ const Analytics = () => {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Categories Chart */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-xl flex flex-col justify-between">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/80 shadow-xl flex flex-col justify-between transition-colors duration-300">
             <div className="mb-4">
-              <h4 className="text-sm font-black text-slate-800 flex items-center gap-1.5 uppercase tracking-wide">
-                <PieIcon size={16} className="text-indigo-500" /> Issues by Category
+              <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5 uppercase tracking-wide">
+                <PieIcon size={16} className="text-indigo-500 dark:text-indigo-400" /> Issues by Category
               </h4>
-              <p className="text-slate-400 text-xs mt-0.5">Visual split of reported civic infrastructure complaints.</p>
+              <p className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">Visual split of reported civic infrastructure complaints.</p>
             </div>
             <div className="h-[280px] w-full">
               {categoryChartData.length > 0 ? (
@@ -190,24 +190,24 @@ const Analytics = () => {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-slate-400 text-xs">No category data recorded.</div>
+                <div className="h-full flex items-center justify-center text-slate-400 dark:text-slate-500 text-xs">No category data recorded.</div>
               )}
             </div>
           </div>
 
           {/* Issue Resolution status */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-xl flex flex-col justify-between">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/80 shadow-xl flex flex-col justify-between transition-colors duration-300">
             <div className="mb-4">
-              <h4 className="text-sm font-black text-slate-800 flex items-center gap-1.5 uppercase tracking-wide">
-                <CheckCircle size={16} className="text-indigo-500" /> Resolution Funnel
+              <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5 uppercase tracking-wide">
+                <CheckCircle size={16} className="text-indigo-500 dark:text-indigo-400" /> Resolution Funnel
               </h4>
-              <p className="text-slate-400 text-xs mt-0.5">Track active versus resolved and closed issue counts.</p>
+              <p className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">Track active versus resolved and closed issue counts.</p>
             </div>
             <div className="h-[280px] w-full">
               {statusChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={statusChartData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" />
                     <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
                     <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
                     <Tooltip 
@@ -222,19 +222,19 @@ const Analytics = () => {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-slate-400 text-xs">No status data recorded.</div>
+                <div className="h-full flex items-center justify-center text-slate-400 dark:text-slate-500 text-xs">No status data recorded.</div>
               )}
             </div>
           </div>
 
           {/* Reporting timeline over time */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-xl lg:col-span-2">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/80 shadow-xl lg:col-span-2 transition-colors duration-300">
             <div className="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
               <div>
-                <h4 className="text-sm font-black text-slate-800 flex items-center gap-1.5 uppercase tracking-wide">
-                  <TrendingUp size={16} className="text-indigo-500" /> Daily Reporting Density
+                <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5 uppercase tracking-wide">
+                  <TrendingUp size={16} className="text-indigo-500 dark:text-indigo-400" /> Daily Reporting Density
                 </h4>
-                <p className="text-slate-400 text-xs mt-0.5">Slight variations of daily issue creation over the past 30 days.</p>
+                <p className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">Slight variations of daily issue creation over the past 30 days.</p>
               </div>
             </div>
             <div className="h-[280px] w-full">
@@ -247,7 +247,7 @@ const Analytics = () => {
                         <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
                     <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} axisLine={false} tickLine={false} />
                     <YAxis stroke="#94a3b8" fontSize={10} axisLine={false} tickLine={false} />
                     <Tooltip 
@@ -257,24 +257,24 @@ const Analytics = () => {
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-slate-400 text-xs py-10">No chronological timeline recorded yet.</div>
+                <div className="h-full flex items-center justify-center text-slate-400 dark:text-slate-500 text-xs py-10">No chronological timeline recorded yet.</div>
               )}
             </div>
           </div>
 
           {/* Upvote Intensity by category */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-xl lg:col-span-2">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/80 shadow-xl lg:col-span-2 transition-colors duration-300">
             <div className="mb-4">
-              <h4 className="text-sm font-black text-slate-800 flex items-center gap-1.5 uppercase tracking-wide">
-                <Users size={16} className="text-indigo-500" /> Community Upvote Support by Category
+              <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5 uppercase tracking-wide">
+                <Users size={16} className="text-indigo-500 dark:text-indigo-400" /> Community Upvote Support by Category
               </h4>
-              <p className="text-slate-400 text-xs mt-0.5">Which infrastructure categories do citizens upvote and care about the most?</p>
+              <p className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">Which infrastructure categories do citizens upvote and care about the most?</p>
             </div>
             <div className="h-[280px] w-full">
               {upvotesChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={upvotesChartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
                     <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
                     <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
                     <Tooltip 
@@ -289,7 +289,7 @@ const Analytics = () => {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-slate-400 text-xs py-10">No community upvote logs.</div>
+                <div className="h-full flex items-center justify-center text-slate-400 dark:text-slate-500 text-xs py-10">No community upvote logs.</div>
               )}
             </div>
           </div>
@@ -299,7 +299,7 @@ const Analytics = () => {
         <div className="mt-10 text-center">
           <Link 
             to="/" 
-            className="inline-flex items-center justify-center px-6 py-3 border border-indigo-200 hover:border-indigo-400 bg-white hover:bg-indigo-50/20 text-indigo-700 text-sm font-extrabold rounded-xl transition-all duration-200 shadow-sm"
+            className="inline-flex items-center justify-center px-6 py-3 border border-indigo-200 dark:border-indigo-800 hover:border-indigo-400 dark:hover:border-indigo-600 bg-white dark:bg-slate-900 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/20 text-indigo-700 dark:text-indigo-300 text-sm font-extrabold rounded-xl transition-all duration-200 shadow-sm"
           >
             📂 Return to Main Grid
           </Link>

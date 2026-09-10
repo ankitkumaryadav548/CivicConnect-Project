@@ -4,11 +4,28 @@ const Issue = require('../models/Issue');
 // @desc    Get all issues
 // @route   GET /api/issues
 // @access  Public
+// @desc    Get all issues
+// @route   GET /api/issues
+// @access  Public (Citizen sees own issues only, Admin sees all complaints)
 exports.getIssues = async (req, res) => {
   try {
     const { category, status, search, reportedBy, page = 1, limit = 10, sort = '-createdAt' } = req.query;
 
     const query = {};
+
+    // Role-based separation:
+    // 1. If user is logged in as 'citizen' (non-admin), ONLY fetch issues reported by that specific user.
+    // 2. If user is logged in as 'admin', fetch all complaints across all users.
+    // 3. If user is NOT logged in (guest), filter out all reports so complaints remain private.
+    if (req.user) {
+      if (req.user.role !== 'admin') {
+        query.reportedBy = new mongoose.Types.ObjectId(String(req.user.id));
+      } else if (reportedBy && mongoose.Types.ObjectId.isValid(reportedBy)) {
+        query.reportedBy = new mongoose.Types.ObjectId(String(reportedBy));
+      }
+    } else {
+      query._id = null; // Unauthenticated guest: no citizen complaints returned
+    }
 
     if (category && category !== 'All') {
       query.category = category.toLowerCase();
@@ -22,22 +39,13 @@ exports.getIssues = async (req, res) => {
       query.title = { $regex: search, $options: 'i' };
     }
 
-    if (reportedBy) {
-      query.reportedBy = reportedBy;
-    }
-
-    // Cast reportedBy to ObjectId to support native MongoDB aggregation filters
-    if (query.reportedBy && mongoose.Types.ObjectId.isValid(query.reportedBy)) {
-      query.reportedBy = new mongoose.Types.ObjectId(String(query.reportedBy));
-    }
-
     // Pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     // Sorting mapping
     let sortStr = '-createdAt';
     if (sort === 'most_upvoted') {
-      sortStr = '-upvotes_count'; // We might need to handle this differently if upvotes is array, or we can aggregate
+      sortStr = '-upvotes_count';
     }
 
     let issues;
@@ -77,7 +85,7 @@ exports.getIssues = async (req, res) => {
 
 // @desc    Get single issue
 // @route   GET /api/issues/:id
-// @access  Public
+// @access  Public (Citizen sees own issue, Admin sees all)
 exports.getIssue = async (req, res) => {
   try {
     const issue = await Issue.findById(req.params.id)
@@ -89,9 +97,52 @@ exports.getIssue = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Issue not found' });
     }
 
+    // Role separation check: If citizen user is logged in, verify ownership
+    if (req.user && req.user.role !== 'admin') {
+      const isOwner = issue.reportedBy && (
+        issue.reportedBy._id ? issue.reportedBy._id.toString() === req.user.id : issue.reportedBy.toString() === req.user.id
+      );
+      if (!isOwner) {
+        return res.status(403).json({ success: false, error: 'Not authorized to view complaints reported by other citizens' });
+      }
+    } else if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Please log in to view issue details' });
+    }
+
     res.status(200).json({ success: true, data: issue });
   } catch (error) {
     res.status(400).json({ success: false, error: error.message });
+  }
+};
+
+const calculateSLADeadline = (priority = 'medium') => {
+  const now = new Date();
+  switch (priority.toLowerCase()) {
+    case 'urgent':
+      return new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours
+    case 'high':
+      return new Date(now.getTime() + 48 * 60 * 60 * 1000); // 48 hours
+    case 'medium':
+      return new Date(now.getTime() + 120 * 60 * 60 * 1000); // 5 days
+    case 'low':
+      return new Date(now.getTime() + 168 * 60 * 60 * 1000); // 7 days
+    default:
+      return new Date(now.getTime() + 120 * 60 * 60 * 1000);
+  }
+};
+
+const getAutoDepartment = (category) => {
+  switch (category?.toLowerCase()) {
+    case 'water':
+      return 'water_board';
+    case 'road':
+      return 'pwd_roads';
+    case 'electricity':
+      return 'electricity_board';
+    case 'sanitation':
+      return 'sanitation_dept';
+    default:
+      return 'general_municipal';
   }
 };
 
@@ -104,6 +155,14 @@ exports.createIssue = async (req, res) => {
     
     if (req.files && req.files.length > 0) {
         req.body.images = req.files.map(file => file.path);
+    }
+
+    if (!req.body.department) {
+      req.body.department = getAutoDepartment(req.body.category);
+    }
+
+    if (!req.body.slaDeadline) {
+      req.body.slaDeadline = calculateSLADeadline(req.body.priority || 'medium');
     }
 
     const issue = await Issue.create(req.body);
@@ -130,10 +189,14 @@ exports.updateIssue = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Not authorized to update this issue' });
     }
 
+    if (req.body.priority && req.body.priority !== issue.priority) {
+      req.body.slaDeadline = calculateSLADeadline(req.body.priority);
+    }
+
     issue = await Issue.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
-    });
+    }).populate('reportedBy', 'name email').populate('history.changedBy', 'name role');
 
     res.status(200).json({ success: true, data: issue });
   } catch (error) {
@@ -216,6 +279,60 @@ exports.changeStatus = async (req, res) => {
       changedBy: req.user.id,
       changedAt: new Date()
     });
+
+    await issue.save();
+
+    const populatedIssue = await Issue.findById(issue._id)
+      .populate('reportedBy', 'name email')
+      .populate('history.changedBy', 'name role')
+      .populate('upvotes', 'name');
+
+    res.status(200).json({ success: true, data: populatedIssue });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
+
+// @desc    Citizen verification of resolved issue (Confirm or Reopen)
+// @route   PATCH /api/issues/:id/citizen-verify
+// @access  Private (Reporting Citizen Only)
+exports.citizenVerifyIssue = async (req, res) => {
+  try {
+    const { decision, comment } = req.body; // decision: 'confirm' or 'reject'
+    
+    if (!['confirm', 'reject'].includes(decision)) {
+      return res.status(400).json({ success: false, error: 'Decision must be confirm or reject' });
+    }
+
+    const issue = await Issue.findById(req.params.id);
+
+    if (!issue) {
+      return res.status(404).json({ success: false, error: 'Issue not found' });
+    }
+
+    // Verify logged-in user is the citizen reporter of this issue
+    const isOwner = issue.reportedBy.toString() === req.user.id;
+    if (!isOwner && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Only the citizen who reported this issue can verify or reopen it' });
+    }
+
+    if (decision === 'confirm') {
+      issue.status = 'closed';
+      issue.history.push({
+        status: 'closed',
+        comment: comment || 'Citizen confirmed issue resolution.',
+        changedBy: req.user.id,
+        changedAt: new Date()
+      });
+    } else if (decision === 'reject') {
+      issue.status = 'in_progress';
+      issue.history.push({
+        status: 'in_progress',
+        comment: comment || 'Citizen reported issue is NOT resolved. Reopened for municipal action.',
+        changedBy: req.user.id,
+        changedAt: new Date()
+      });
+    }
 
     await issue.save();
 

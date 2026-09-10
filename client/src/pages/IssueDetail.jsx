@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axios';
 import { useAuth } from '../hooks/useAuth';
 import { MapPin, Clock, ThumbsUp, Trash2, ArrowLeft, Send, MessageSquare, Navigation, Copy, RotateCcw, Layers, Lock, Wrench, CheckCircle } from 'lucide-react';
-import { StatusBadge, CategoryBadge } from '../components/Badges';
+import { StatusBadge, CategoryBadge, DepartmentBadge, SLABadge } from '../components/Badges';
 import toast from 'react-hot-toast';
 import { IssueCardSkeleton } from '../components/Skeleton';
 import L from 'leaflet';
@@ -98,8 +98,7 @@ const IssueDetail = () => {
           } else {
             setMapCoords(null);
           }
-        } catch (error) {
-          console.error("Geocoding failed:", error);
+        } catch (err) {
           setMapCoords(null);
         }
       };
@@ -126,7 +125,8 @@ const IssueDetail = () => {
       attributionControl: false
     });
 
-    tileLayerRef.current = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    tileLayerRef.current = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      attribution: '',
       maxZoom: 20
     }).addTo(miniMapInstanceRef.current);
 
@@ -141,13 +141,14 @@ const IssueDetail = () => {
     miniMapInstanceRef.current.removeLayer(tileLayerRef.current);
 
     if (tileMode === 'street') {
-      tileLayerRef.current = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      tileLayerRef.current = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        attribution: '',
         maxZoom: 20
       });
     } else {
-      tileLayerRef.current = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        maxZoom: 19,
-        attribution: 'Tiles &copy; Esri'
+      tileLayerRef.current = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        attribution: '',
+        maxZoom: 20
       });
     }
 
@@ -186,17 +187,17 @@ const IssueDetail = () => {
     }
   };
 
-  const handleSaveCoords = async () => {
-    if (!mapCoords) return;
+  const handleSaveGeocodedCoordinates = async () => {
+    if (!mapCoords || !mapCoords.isGeocoded) return;
     setSavingCoords(true);
     try {
-      await axiosInstance.put(`/issues/${id}`, {
+      const res = await axiosInstance.put(`/issues/${id}`, {
         latitude: mapCoords.lat,
         longitude: mapCoords.lng
       });
-      toast.success('Precise coordinates saved to database!');
-      setIssue({ ...issue, latitude: mapCoords.lat, longitude: mapCoords.lng });
-      setMapCoords({ ...mapCoords, isGeocoded: false });
+      setIssue(res.data.data);
+      setMapCoords({ lat: mapCoords.lat, lng: mapCoords.lng, isGeocoded: false });
+      toast.success('Pinned location permanently stored!');
     } catch (error) {
       toast.error('Failed to save coordinates to database');
     } finally {
@@ -302,79 +303,225 @@ const IssueDetail = () => {
     }
   };
 
+  const handleDepartmentChange = async (newDept) => {
+    try {
+      const res = await axiosInstance.put(`/issues/${id}`, { department: newDept });
+      setIssue(res.data.data);
+      toast.success('Assigned Department updated!');
+    } catch (error) {
+      toast.error('Failed to update department');
+    }
+  };
+
+  const handlePriorityChange = async (newPriority) => {
+    try {
+      const res = await axiosInstance.put(`/issues/${id}`, { priority: newPriority });
+      setIssue(res.data.data);
+      toast.success(`Priority updated to ${newPriority.toUpperCase()} (SLA recalculated)!`);
+    } catch (error) {
+      toast.error('Failed to update priority');
+    }
+  };
+
+  const handleCitizenVerify = async (decision) => {
+    try {
+      let comment = '';
+      if (decision === 'confirm') {
+        comment = window.prompt('Optional feedback message (e.g. "Road repair verified satisfactorily"):') || 'Citizen confirmed issue resolution.';
+      } else {
+        comment = window.prompt('Please explain why the issue is still unresolved (e.g. "Water leak still leaking"):') || 'Citizen reported issue is NOT resolved.';
+      }
+
+      const res = await axiosInstance.patch(`/issues/${id}/citizen-verify`, {
+        decision,
+        comment
+      });
+      setIssue(res.data.data);
+      if (decision === 'confirm') {
+        toast.success('Thank you! Issue resolution confirmed and officially closed.');
+      } else {
+        toast.error('Issue has been reopened for further municipal action.');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to update resolution state');
+    }
+  };
+
   if (loading) return <div className="max-w-4xl mx-auto py-12 px-4"><IssueCardSkeleton /></div>;
   if (!issue) return <div className="text-center py-20">Issue not found</div>;
 
   const hasUpvoted = user && issue.upvotes.some(u => u._id === user._id || u === user._id);
-  const isOwnerOrAdmin = user && (issue.reportedBy._id === user._id || user.role === 'admin');
+  const isOwner = user && (issue.reportedBy._id === user._id || issue.reportedBy === user._id);
+  const isOwnerOrAdmin = user && (isOwner || user.role === 'admin');
   const isAdmin = user && user.role === 'admin';
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 transition-colors duration-300">
       <button 
         onClick={() => navigate(-1)} 
-        className="flex items-center text-xs font-bold text-slate-400 hover:text-indigo-600 mb-6 transition-colors gap-1 uppercase tracking-wider"
+        className="flex items-center text-xs font-bold text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 mb-6 transition-colors gap-1 uppercase tracking-wider cursor-pointer"
       >
         <ArrowLeft size={14} /> Back
       </button>
 
       {/* Main Issue Card Container */}
-      <div className="bg-white rounded-3xl shadow-xl border border-slate-100/80 overflow-hidden mb-8">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-100/80 dark:border-slate-800/80 overflow-hidden mb-8 transition-colors duration-300">
         <div className="p-6 md:p-10">
           {/* Header Metadata */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 mb-8 pb-6 border-b border-slate-100">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 mb-6 pb-6 border-b border-slate-100 dark:border-slate-800">
             <div>
               <div className="flex items-center gap-2.5 mb-3.5">
                 <CategoryBadge category={issue.category} />
                 <StatusBadge status={issue.status} />
               </div>
-              <h1 className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight leading-tight">
+              <h1 className="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight leading-tight">
                 {issue.title}
               </h1>
             </div>
             
-            {/* Municipal Admin controls */}
+            {/* Municipal Admin Controls */}
             {isAdmin && (
-              <div className="flex-shrink-0 flex items-center gap-2.5 bg-slate-50 border border-slate-200/60 p-2 rounded-2xl">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide px-2">Update Status</span>
-                <select
-                  value={issue.status}
-                  onChange={(e) => handleStatusChange(e.target.value)}
-                  className="block min-w-[130px] pl-3 pr-8 py-1.5 text-xs font-bold border-slate-200 bg-white text-slate-700 rounded-xl cursor-pointer border"
-                >
-                  <option value="open">🔓 Open</option>
-                  <option value="in_progress">⚙️ In Progress</option>
-                  <option value="resolved">✅ Resolved</option>
-                  <option value="closed">🔒 Closed</option>
-                </select>
+              <div className="flex flex-wrap items-center gap-3 bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 p-3 rounded-2xl shadow-sm">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wide">Status:</span>
+                  <select
+                    value={issue.status}
+                    onChange={(e) => handleStatusChange(e.target.value)}
+                    className="px-3 py-1.5 text-xs font-bold border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 rounded-xl cursor-pointer border shadow-sm"
+                  >
+                    <option value="open">🔓 Open</option>
+                    <option value="in_progress">⚙️ In Progress</option>
+                    <option value="resolved">✅ Resolved</option>
+                    <option value="closed">🔒 Closed</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wide">Dept:</span>
+                  <select
+                    value={issue.department || 'general_municipal'}
+                    onChange={(e) => handleDepartmentChange(e.target.value)}
+                    className="px-3 py-1.5 text-xs font-bold border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 rounded-xl cursor-pointer border shadow-sm"
+                  >
+                    <option value="water_board">💧 Water Board</option>
+                    <option value="pwd_roads">🛣️ Public Works (PWD)</option>
+                    <option value="electricity_board">⚡ Electricity Board</option>
+                    <option value="sanitation_dept">🧹 Sanitation Dept</option>
+                    <option value="general_municipal">🏛️ General Municipal</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wide">Priority:</span>
+                  <select
+                    value={issue.priority || 'medium'}
+                    onChange={(e) => handlePriorityChange(e.target.value)}
+                    className="px-3 py-1.5 text-xs font-bold border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 rounded-xl cursor-pointer border shadow-sm"
+                  >
+                    <option value="low">Low (7 Days SLA)</option>
+                    <option value="medium">Medium (5 Days SLA)</option>
+                    <option value="high">High (48 Hrs SLA)</option>
+                    <option value="urgent">Urgent (24 Hrs SLA)</option>
+                  </select>
+                </div>
               </div>
             )}
           </div>
 
+          {/* Department & SLA Tracking Header Panel */}
+          <div className="mb-8 p-4.5 rounded-2xl bg-slate-50/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <DepartmentBadge department={issue.department} />
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                Target Priority: <span className="text-slate-900 dark:text-slate-100 font-extrabold">{issue.priority || 'medium'}</span>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-400 dark:text-slate-500">Resolution SLA:</span>
+              <SLABadge slaDeadline={issue.slaDeadline} status={issue.status} priority={issue.priority} />
+            </div>
+          </div>
+
+          {/* Citizen Resolution Verification Banner */}
+          {issue.status === 'resolved' && isOwner && (
+            <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-indigo-50 dark:from-emerald-950/60 dark:via-teal-950/60 dark:to-indigo-950/60 border-2 border-emerald-300/80 dark:border-emerald-700/80 shadow-lg shadow-emerald-500/5 animate-pulse">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-200 font-extrabold text-base">
+                    <CheckCircle size={22} className="text-emerald-600 dark:text-emerald-400" />
+                    <span>Municipal Officer Marked This Complaint as RESOLVED!</span>
+                  </div>
+                  <p className="text-slate-600 dark:text-slate-300 text-xs font-medium">
+                    As the citizen who reported this problem, please confirm if the repair near your home has been completed to your satisfaction:
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap sm:flex-nowrap gap-3 w-full lg:w-auto">
+                  <button
+                    onClick={() => handleCitizenVerify('confirm')}
+                    className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <CheckCircle size={16} />
+                    <span>Yes, Confirm Solved</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleCitizenVerify('reject')}
+                    className="w-full sm:w-auto px-5 py-2.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <RotateCcw size={16} />
+                    <span>No, Issue Still Exists (Reopen)</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Citizen Confirmation Status Banner */}
+          {issue.status === 'closed' && (
+            <div className="mb-8 p-4.5 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/50 border border-emerald-200/90 dark:border-emerald-800 flex items-center gap-3">
+              <div className="p-2.5 bg-emerald-600 text-white rounded-xl shadow-sm">
+                <CheckCircle size={20} />
+              </div>
+              <div>
+                <h4 className="text-xs font-extrabold text-emerald-950 dark:text-emerald-200 uppercase tracking-wide">
+                  {isAdmin ? "Resolution Officially Verified & Closed by Citizen" : "Your Issue is Solved and Closed"}
+                </h4>
+                <p className="text-xs text-emerald-800 dark:text-emerald-300 font-medium">
+                  {isAdmin
+                    ? "Reporting citizen has confirmed that the repair work near their location was completed successfully."
+                    : "Thank you for confirming! Your reported complaint has been officially solved and closed."}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* User reported statistics */}
-          <div className="flex flex-wrap gap-y-2 gap-x-5 text-xs text-slate-400 font-semibold mb-8">
+          <div className="flex flex-wrap gap-y-2 gap-x-5 text-xs text-slate-400 dark:text-slate-500 font-semibold mb-8">
             <span className="flex items-center gap-1.5">
-              <MapPin size={15} className="text-indigo-500" /> {issue.location}
+              <MapPin size={15} className="text-indigo-500 dark:text-indigo-400" /> {issue.location}
             </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-200 self-center"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 self-center"></span>
             <span className="flex items-center gap-1.5">
-              <Clock size={15} className="text-slate-400" /> Reported {new Date(issue.createdAt).toLocaleDateString()}
+              <Clock size={15} className="text-slate-400 dark:text-slate-500" /> Reported {new Date(issue.createdAt).toLocaleDateString()}
             </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-200 self-center"></span>
-            <span>By <strong className="text-slate-600">{issue.reportedBy.name}</strong></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 self-center"></span>
+            <span>By <strong className="text-slate-600 dark:text-slate-300">{issue.reportedBy.name}</strong></span>
           </div>
 
           {/* Two-Column Grid for Details + Map */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
             {/* Left 2 Cols: Main details & photos */}
             <div className="lg:col-span-2 space-y-6">
-              <div className="prose max-w-none text-slate-600 text-sm md:text-base leading-relaxed whitespace-pre-wrap">
+              <div className="prose max-w-none text-slate-600 dark:text-slate-300 text-sm md:text-base leading-relaxed whitespace-pre-wrap">
                 {issue.description}
               </div>
 
               {issue.images && issue.images.length > 0 && (
-                <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100">
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Supporting Visual Evidence</h3>
+                <div className="bg-slate-50/50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Supporting Visual Evidence</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {issue.images.map((img, i) => (
                       <a 
@@ -382,7 +529,7 @@ const IssueDetail = () => {
                         href={img} 
                         target="_blank" 
                         rel="noopener noreferrer" 
-                        className="block rounded-xl overflow-hidden border border-slate-200/60 aspect-video shadow-sm transition-transform duration-300 hover:scale-102 hover:shadow-md bg-white animate-fade-in"
+                        className="block rounded-xl overflow-hidden border border-slate-200/60 dark:border-slate-700 aspect-video shadow-sm transition-transform duration-300 hover:scale-102 hover:shadow-md bg-white dark:bg-slate-900 animate-fade-in"
                       >
                         <img src={img} alt={`Issue ${i}`} className="w-full h-full object-cover" />
                       </a>
@@ -392,27 +539,27 @@ const IssueDetail = () => {
               )}
 
               {/* Resolution Progress Timeline */}
-              <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
-                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-6 flex items-center gap-1.5">
+              <div className="bg-slate-50/50 dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-800">
+                <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-1.5">
                   ⏱️ Resolution Progress Timeline
                 </h3>
                 
-                <div className="relative border-l border-slate-200 ml-3 pl-6 space-y-6">
+                <div className="relative border-l border-slate-200 dark:border-slate-700 ml-3 pl-6 space-y-6">
                   {/* Step 1: Issue Reported */}
                   <div className="relative animate-fade-in">
                     <div className="absolute -left-[31px] top-0.5 bg-blue-500 text-white rounded-full p-1.5 shadow-md flex items-center justify-center">
                       <Clock size={12} className="text-white" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-black text-slate-800 uppercase tracking-wide">Issue Reported</h4>
-                      <p className="text-slate-400 text-[10px] font-semibold mt-0.5">
+                      <h4 className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wide">Issue Reported</h4>
+                      <p className="text-slate-400 dark:text-slate-500 text-[10px] font-semibold mt-0.5">
                         {new Date(issue.createdAt).toLocaleString(undefined, {
                           dateStyle: 'medium',
                           timeStyle: 'short'
                         })}
                       </p>
-                      <p className="text-slate-600 text-xs mt-1.5 leading-relaxed bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                        Reported by <strong className="text-slate-700">{issue.reportedBy.name}</strong>.
+                      <p className="text-slate-600 dark:text-slate-300 text-xs mt-1.5 leading-relaxed bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                        Reported by <strong className="text-slate-700 dark:text-slate-200">{issue.reportedBy.name}</strong>.
                       </p>
                     </div>
                   </div>
@@ -440,16 +587,16 @@ const IssueDetail = () => {
                           <IconComponent size={12} className="text-white" />
                         </div>
                         <div>
-                          <h4 className="text-xs font-black text-slate-800 uppercase tracking-wide">
+                          <h4 className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wide">
                             {statusLabel}
                           </h4>
-                          <p className="text-slate-400 text-[10px] font-semibold mt-0.5">
+                          <p className="text-slate-400 dark:text-slate-500 text-[10px] font-semibold mt-0.5">
                             {new Date(hist.changedAt).toLocaleString(undefined, {
                               dateStyle: 'medium',
                               timeStyle: 'short'
-                            })} by <strong className="text-slate-500">{hist.changedBy?.name || 'Municipal Officer'}</strong> ({hist.changedBy?.role || 'Officer'})
+                            })} by <strong className="text-slate-500 dark:text-slate-400">{hist.changedBy?.name || 'Municipal Officer'}</strong> ({hist.changedBy?.role || 'Officer'})
                           </p>
-                          <p className="text-slate-600 text-xs mt-1.5 leading-relaxed bg-white p-3 rounded-xl border border-slate-100 shadow-sm font-medium italic">
+                          <p className="text-slate-600 dark:text-slate-300 text-xs mt-1.5 leading-relaxed bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm font-medium italic">
                             "{hist.comment}"
                           </p>
                         </div>
@@ -463,13 +610,13 @@ const IssueDetail = () => {
             {/* Right 1 Col: Mini Map & Location sidebar card */}
             <div className="lg:col-span-1">
               {mapCoords ? (
-                <div className="bg-slate-50/70 border border-slate-200/60 rounded-2xl p-4.5 space-y-4 shadow-sm h-full flex flex-col justify-between">
+                <div className="bg-slate-50/70 dark:bg-slate-800/70 border border-slate-200/60 dark:border-slate-700/60 rounded-2xl p-4.5 space-y-4 shadow-sm h-full flex flex-col justify-between transition-colors duration-300">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <h4 className="text-xs font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                         📍 {mapCoords.isGeocoded ? 'Estimated Location' : 'Precise Location'}
                       </h4>
-                      <p className="text-[11px] text-slate-400 font-semibold mt-0.5">
+                      <p className="text-[11px] text-slate-400 dark:text-slate-400 font-semibold mt-0.5">
                         {mapCoords.isGeocoded 
                           ? 'Auto-geocoded address lookup. Pin is not saved yet.' 
                           : 'Mapped location of the reported concern.'}
@@ -477,7 +624,7 @@ const IssueDetail = () => {
                     </div>
                   </div>
                   
-                  <div className="relative w-full h-[200px] lg:flex-grow min-h-[220px] rounded-xl border border-slate-200 shadow-inner overflow-hidden bg-slate-100">
+                  <div className="relative w-full h-[200px] lg:flex-grow min-h-[220px] rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner overflow-hidden bg-slate-100 dark:bg-slate-900">
                     <div 
                       ref={miniMapContainerRef} 
                       className="w-full h-full relative z-10"
@@ -489,17 +636,17 @@ const IssueDetail = () => {
                       <button
                         type="button"
                         onClick={() => setTileMode(tileMode === 'street' ? 'satellite' : 'street')}
-                        className="p-2 bg-white/95 backdrop-blur shadow-md hover:bg-white text-slate-600 hover:text-indigo-600 rounded-lg transition-all border border-slate-200/50 cursor-pointer active:scale-95"
+                        className="p-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur shadow-md hover:bg-white dark:hover:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg transition-all border border-slate-200/50 dark:border-slate-700/50 cursor-pointer active:scale-95"
                         title={tileMode === 'street' ? "Switch to Satellite Imagery" : "Switch to Street Map"}
                       >
-                        <Layers size={13} className={tileMode === 'satellite' ? "text-indigo-600 fill-indigo-50" : ""} />
+                        <Layers size={13} className={tileMode === 'satellite' ? "text-indigo-600 dark:text-indigo-400 fill-indigo-50 dark:fill-indigo-950" : ""} />
                       </button>
 
                       {/* Recenter Map Button */}
                       <button
                         type="button"
                         onClick={handleRecenter}
-                        className="p-2 bg-white/95 backdrop-blur shadow-md hover:bg-white text-slate-600 hover:text-indigo-600 rounded-lg transition-all border border-slate-200/50 cursor-pointer active:scale-95"
+                        className="p-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur shadow-md hover:bg-white dark:hover:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg transition-all border border-slate-200/50 dark:border-slate-700/50 cursor-pointer active:scale-95"
                         title="Re-center on pin"
                       >
                         <RotateCcw size={13} />
@@ -508,16 +655,16 @@ const IssueDetail = () => {
                   </div>
 
                   {/* Coordinates view & copy button */}
-                  <div className="bg-white p-2 px-3 rounded-xl border border-slate-200/60 text-[10px] font-mono font-bold flex justify-between items-center text-slate-500 shadow-sm flex-shrink-0">
+                  <div className="bg-white dark:bg-slate-900 p-2 px-3 rounded-xl border border-slate-200/60 dark:border-slate-700/60 text-[10px] font-mono font-bold flex justify-between items-center text-slate-500 dark:text-slate-400 shadow-sm flex-shrink-0">
                     <div className="flex gap-2.5">
                       <span>LAT: {mapCoords.lat.toFixed(6)}</span>
-                      <span className="w-px bg-slate-200"></span>
+                      <span className="w-px bg-slate-200 dark:bg-slate-700"></span>
                       <span>LNG: {mapCoords.lng.toFixed(6)}</span>
                     </div>
                     <button
                       type="button"
                       onClick={handleCopyCoords}
-                      className="text-slate-400 hover:text-indigo-600 p-1 hover:bg-slate-50 rounded transition-all cursor-pointer active:scale-90"
+                      className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 p-1 hover:bg-slate-50 dark:hover:bg-slate-800 rounded transition-all cursor-pointer active:scale-90"
                       title="Copy Coordinates"
                     >
                       <Copy size={11} />
@@ -547,9 +694,9 @@ const IssueDetail = () => {
                   )}
                 </div>
               ) : (
-                <div className="bg-slate-50/70 border border-slate-200/60 border-dashed rounded-2xl p-6 text-center h-full flex flex-col justify-center items-center text-slate-400 space-y-2 py-10">
+                <div className="bg-slate-50/70 dark:bg-slate-800/70 border border-slate-200/60 dark:border-slate-700/60 border-dashed rounded-2xl p-6 text-center h-full flex flex-col justify-center items-center text-slate-400 dark:text-slate-500 space-y-2 py-10 transition-colors duration-300">
                   <div className="text-2xl">📍</div>
-                  <h5 className="text-xs font-bold text-slate-600">No Geolocation Saved</h5>
+                  <h5 className="text-xs font-bold text-slate-600 dark:text-slate-300">No Geolocation Saved</h5>
                   <p className="text-[10px] max-w-[200px]">This issue was reported without precise GPS coordinates.</p>
                 </div>
               )}
@@ -557,23 +704,23 @@ const IssueDetail = () => {
           </div>
 
           {/* Card footer details */}
-          <div className="flex items-center justify-between pt-6 border-t border-slate-100">
+          <div className="flex items-center justify-between pt-6 border-t border-slate-100 dark:border-slate-800">
             <button
               onClick={handleUpvote}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold cursor-pointer transition-all duration-200 ${
                 hasUpvoted 
-                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-sm shadow-indigo-100 scale-102' 
-                  : 'bg-slate-50 text-slate-600 border border-slate-200/80 hover:bg-slate-100'
+                  ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shadow-sm shadow-indigo-100 dark:shadow-indigo-950 scale-102' 
+                  : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
               }`}
             >
-              <ThumbsUp size={15} className={hasUpvoted ? 'fill-indigo-600' : ''} />
+              <ThumbsUp size={15} className={hasUpvoted ? 'fill-indigo-600 dark:fill-indigo-400' : ''} />
               <span>{issue.upvotes?.length || 0} Citizens Upvoted</span>
             </button>
 
             {isOwnerOrAdmin && (
               <button 
                 onClick={handleDeleteIssue}
-                className="flex items-center gap-1 text-rose-600 hover:text-rose-700 font-bold text-xs px-4 py-2 rounded-xl hover:bg-rose-50 border border-transparent hover:border-rose-100 transition-all cursor-pointer"
+                className="flex items-center gap-1 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 font-bold text-xs px-4 py-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-100 dark:hover:border-rose-900/40 transition-all cursor-pointer"
               >
                 <Trash2 size={15} /> Delete Report
               </button>
@@ -583,24 +730,24 @@ const IssueDetail = () => {
       </div>
 
       {/* Discussion comments section */}
-      <div className="bg-white rounded-3xl shadow-xl border border-slate-100/80 overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-100/80 dark:border-slate-800/80 overflow-hidden transition-colors duration-300">
         <div className="p-6 md:p-10">
-          <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
-            <MessageSquare size={20} className="text-indigo-600" />
-            <h3 className="text-lg font-bold text-slate-800">
+          <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <MessageSquare size={20} className="text-indigo-600 dark:text-indigo-400" />
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
               Community Discussion ({comments.length})
             </h3>
           </div>
           
           {/* Post custom comment form */}
           {!user ? (
-            <div className="bg-slate-50/50 border border-slate-100 rounded-3xl p-6 md:p-8 text-center flex flex-col items-center justify-center gap-4 mb-8">
-              <div className="h-12 w-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100/50">
+            <div className="bg-slate-50/50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 md:p-8 text-center flex flex-col items-center justify-center gap-4 mb-8">
+              <div className="h-12 w-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm border border-indigo-100/50 dark:border-indigo-900/50">
                 <Lock size={20} className="animate-pulse" />
               </div>
               <div>
-                <h4 className="text-base font-bold text-slate-800">Join the discussion</h4>
-                <p className="text-xs text-slate-500 max-w-sm mt-1">
+                <h4 className="text-base font-bold text-slate-800 dark:text-slate-100">Join the discussion</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1">
                   You need to be signed in to ask questions, share updates, or comment on community issues.
                 </p>
               </div>
@@ -617,7 +764,7 @@ const IssueDetail = () => {
                 <div className="flex-grow">
                   <textarea
                     rows="3"
-                    className="block w-full border-slate-200 bg-slate-50 text-slate-800 rounded-2xl shadow-sm sm:text-sm px-4 py-3 placeholder-slate-400 focus:bg-white resize-none"
+                    className="block w-full border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl shadow-sm sm:text-sm px-4 py-3 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-900 resize-none transition-colors duration-200"
                     placeholder="Add helpful info or updates regarding this issue..."
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
@@ -646,32 +793,32 @@ const IssueDetail = () => {
                     {comment.userId?.name ? comment.userId.name.charAt(0).toUpperCase() : 'U'}
                   </div>
                 </div>
-                <div className="flex-grow bg-slate-50 border border-slate-100 rounded-2xl p-4">
+                <div className="flex-grow bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700 rounded-2xl p-4 transition-colors duration-200">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <span className="font-bold text-slate-800 text-sm">
+                      <span className="font-bold text-slate-800 dark:text-slate-100 text-sm">
                         {comment.userId?.name || 'Anonymous User'}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-semibold ml-2.5">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold ml-2.5">
                         {new Date(comment.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                     {(user && (user.role === 'admin' || user._id === comment.userId?._id)) && (
                       <button 
                         onClick={() => handleDeleteComment(comment._id)}
-                        className="text-slate-400 hover:text-rose-500 transition-colors p-1 rounded-lg cursor-pointer"
+                        className="text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 transition-colors p-1 rounded-lg cursor-pointer"
                         title="Delete comment"
                       >
                         <Trash2 size={13} />
                       </button>
                     )}
                   </div>
-                  <p className="text-slate-600 text-xs md:text-sm leading-relaxed whitespace-pre-wrap">{comment.text}</p>
+                  <p className="text-slate-600 dark:text-slate-300 text-xs md:text-sm leading-relaxed whitespace-pre-wrap">{comment.text}</p>
                 </div>
               </div>
             ))}
             {comments.length === 0 && (
-              <div className="text-center py-8 text-slate-400 text-xs font-semibold">
+              <div className="text-center py-8 text-slate-400 dark:text-slate-500 text-xs font-semibold">
                 💬 No conversation has started yet. Be the first to leave a comment!
               </div>
             )}

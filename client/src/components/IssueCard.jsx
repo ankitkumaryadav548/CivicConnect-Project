@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, ThumbsUp, MessageSquare, Clock, User } from 'lucide-react';
-import { StatusBadge, CategoryBadge } from './Badges';
+import { StatusBadge, CategoryBadge, DepartmentBadge, SLABadge } from './Badges';
 
 const IssueCard = ({ issue }) => {
   const timeAgo = (date) => {
@@ -20,9 +20,9 @@ const IssueCard = ({ issue }) => {
   };
 
   return (
-    <div className="group bg-white rounded-2xl border border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 overflow-hidden flex flex-col h-full">
+    <div className="group bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 hover:border-slate-200 dark:hover:border-slate-700 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 overflow-hidden flex flex-col h-full">
       {/* Visual Image Header */}
-      <div className="h-48 relative overflow-hidden bg-slate-100">
+      <div className="h-48 relative overflow-hidden bg-slate-100 dark:bg-slate-800">
         {issue.images && issue.images.length > 0 ? (
           <img 
             src={issue.images[0]} 
@@ -30,7 +30,7 @@ const IssueCard = ({ issue }) => {
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50 gap-2">
+          <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 dark:text-slate-600 bg-slate-50 dark:bg-slate-800/80 gap-2">
             <span className="text-3xl">🏛️</span>
             <span className="text-xs font-semibold">Civic Improvement</span>
           </div>
@@ -46,41 +46,47 @@ const IssueCard = ({ issue }) => {
 
       {/* Card Details */}
       <div className="p-5 flex flex-col flex-grow">
+        {/* Department and SLA Badges bar */}
+        <div className="flex items-center justify-between gap-2 mb-2.5">
+          <DepartmentBadge department={issue.department} />
+          <SLABadge slaDeadline={issue.slaDeadline} status={issue.status} priority={issue.priority} />
+        </div>
+
         <Link to={`/issue/${issue._id}`} className="block group/title mb-2.5">
-          <h3 className="text-base font-bold text-slate-800 leading-snug group-hover/title:text-indigo-600 transition-colors line-clamp-2">
+          <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 leading-snug group-hover/title:text-indigo-600 dark:group-hover/title:text-indigo-400 transition-colors line-clamp-2">
             {issue.title}
           </h3>
         </Link>
 
         {/* Issue location metadata */}
-        <div className="flex items-center gap-3 text-xs text-slate-400 font-semibold mb-4">
+        <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500 font-semibold mb-4">
           <span className="flex items-center gap-1">
-            <MapPin size={14} className="text-indigo-500" />
+            <MapPin size={14} className="text-indigo-500 dark:text-indigo-400" />
             <span className="truncate max-w-[130px]" title={issue.location}>{issue.location}</span>
           </span>
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-200"></span>
+          <span className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700"></span>
           <span className="flex items-center gap-1">
-            <Clock size={14} className="text-slate-400" />
+            <Clock size={14} className="text-slate-400 dark:text-slate-500" />
             <span>{timeAgo(issue.createdAt)}</span>
           </span>
         </div>
 
         {/* Card Footer controls */}
-        <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center text-xs font-bold">
+        <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs font-bold">
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-slate-600">
-              <ThumbsUp size={13} className={issue.upvotes?.length > 0 ? 'text-indigo-600 fill-indigo-600' : 'text-slate-400'} />
+            <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/60 text-slate-600 dark:text-slate-300">
+              <ThumbsUp size={13} className={issue.upvotes?.length > 0 ? 'text-indigo-600 dark:text-indigo-400 fill-indigo-600 dark:fill-indigo-400' : 'text-slate-400 dark:text-slate-500'} />
               <span>{issue.upvotes?.length || 0}</span>
             </span>
-            <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-slate-500">
-              <MessageSquare size={13} className="text-slate-400" />
+            <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/60 text-slate-500 dark:text-slate-400">
+              <MessageSquare size={13} className="text-slate-400 dark:text-slate-500" />
               <span>Discuss</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-1 text-slate-400">
-            <div className="w-5 h-5 rounded-full bg-indigo-50 flex items-center justify-center">
-              <User size={10} className="text-indigo-600" />
+          <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
+            <div className="w-5 h-5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 flex items-center justify-center">
+              <User size={10} className="text-indigo-600 dark:text-indigo-400" />
             </div>
             <span className="truncate max-w-[100px]">{issue.reportedBy?.name || 'Citizen'}</span>
           </div>

@@ -23,6 +23,19 @@ const issueSchema = new mongoose.Schema(
       enum: ['open', 'in_progress', 'resolved', 'closed'],
       default: 'open',
     },
+    priority: {
+      type: String,
+      enum: ['low', 'medium', 'high', 'urgent'],
+      default: 'medium',
+    },
+    department: {
+      type: String,
+      enum: ['water_board', 'pwd_roads', 'electricity_board', 'sanitation_dept', 'general_municipal'],
+      default: 'general_municipal',
+    },
+    slaDeadline: {
+      type: Date,
+    },
     images: {
       type: [String], // Array of Cloudinary URLs
       validate: [arrayLimit, '{PATH} exceeds the limit of 3'],
