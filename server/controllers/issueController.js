@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 const Issue = require('../models/Issue');
+const Notification = require('../models/Notification');
+const { broadcastEvent, emitToUser } = require('../config/socket');
+const { sendStatusUpdateEmail } = require('../config/mailer');
 
 // @desc    Get all issues
 // @route   GET /api/issues
@@ -17,14 +20,8 @@ exports.getIssues = async (req, res) => {
     // 1. If user is logged in as 'citizen' (non-admin), ONLY fetch issues reported by that specific user.
     // 2. If user is logged in as 'admin', fetch all complaints across all users.
     // 3. If user is NOT logged in (guest), filter out all reports so complaints remain private.
-    if (req.user) {
-      if (req.user.role !== 'admin') {
-        query.reportedBy = new mongoose.Types.ObjectId(String(req.user.id));
-      } else if (reportedBy && mongoose.Types.ObjectId.isValid(reportedBy)) {
-        query.reportedBy = new mongoose.Types.ObjectId(String(reportedBy));
-      }
-    } else {
-      query._id = null; // Unauthenticated guest: no citizen complaints returned
+    if (reportedBy && mongoose.Types.ObjectId.isValid(reportedBy)) {
+      query.reportedBy = new mongoose.Types.ObjectId(String(reportedBy));
     }
 
     if (category && category !== 'All') {
@@ -157,6 +154,18 @@ exports.createIssue = async (req, res) => {
         req.body.images = req.files.map(file => file.path);
     }
 
+    if (req.body.latitude !== undefined && req.body.latitude !== '' && !isNaN(Number(req.body.latitude))) {
+      req.body.latitude = Number(req.body.latitude);
+    } else {
+      delete req.body.latitude;
+    }
+
+    if (req.body.longitude !== undefined && req.body.longitude !== '' && !isNaN(Number(req.body.longitude))) {
+      req.body.longitude = Number(req.body.longitude);
+    } else {
+      delete req.body.longitude;
+    }
+
     if (!req.body.department) {
       req.body.department = getAutoDepartment(req.body.category);
     }
@@ -166,8 +175,11 @@ exports.createIssue = async (req, res) => {
     }
 
     const issue = await Issue.create(req.body);
+    const populatedIssue = await Issue.findById(issue._id).populate('reportedBy', 'name email');
 
-    res.status(201).json({ success: true, data: issue });
+    broadcastEvent('issue:created', populatedIssue);
+
+    res.status(201).json({ success: true, data: populatedIssue });
   } catch (error) {
     res.status(400).json({ success: false, error: error.message });
   }
@@ -249,6 +261,8 @@ exports.toggleUpvote = async (req, res) => {
 
     await issue.save();
 
+    broadcastEvent('issue:upvoted', { issueId: issue._id, upvotes: issue.upvotes });
+
     res.status(200).json({ success: true, data: issue.upvotes });
   } catch (error) {
     res.status(400).json({ success: false, error: error.message });
@@ -286,6 +300,40 @@ exports.changeStatus = async (req, res) => {
       .populate('reportedBy', 'name email')
       .populate('history.changedBy', 'name role')
       .populate('upvotes', 'name');
+
+    // Broadcast status update event
+    broadcastEvent('issue:status_updated', populatedIssue);
+
+    // Create in-app notification & send email
+    if (populatedIssue.reportedBy) {
+      const recipientId = populatedIssue.reportedBy._id
+        ? populatedIssue.reportedBy._id.toString()
+        : populatedIssue.reportedBy.toString();
+
+      if (recipientId !== req.user.id) {
+        const notification = await Notification.create({
+          recipient: recipientId,
+          sender: req.user.id,
+          issue: populatedIssue._id,
+          type: 'status_change',
+          title: 'Issue Status Updated',
+          message: `Status of "${populatedIssue.title}" changed to ${status.replace('_', ' ').toUpperCase()}`,
+        });
+
+        emitToUser(recipientId, 'notification:new', notification);
+
+        if (populatedIssue.reportedBy.email) {
+          sendStatusUpdateEmail({
+            recipientEmail: populatedIssue.reportedBy.email,
+            recipientName: populatedIssue.reportedBy.name,
+            issueTitle: populatedIssue.title,
+            issueId: populatedIssue._id,
+            newStatus: status,
+            comment,
+          });
+        }
+      }
+    }
 
     res.status(200).json({ success: true, data: populatedIssue });
   } catch (error) {

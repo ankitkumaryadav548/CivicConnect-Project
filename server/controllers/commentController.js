@@ -1,5 +1,7 @@
 const Comment = require('../models/Comment');
 const Issue = require('../models/Issue');
+const Notification = require('../models/Notification');
+const { broadcastEvent, emitToUser } = require('../config/socket');
 
 // @desc    Get comments for an issue
 // @route   GET /api/issues/:id/comments
@@ -34,6 +36,23 @@ exports.addComment = async (req, res) => {
     
     // populate user info so frontend can display immediately by querying freshly
     comment = await Comment.findById(comment._id).populate('userId', 'name');
+
+    // Real-time Socket broadcast
+    broadcastEvent('comment:created', { issueId: req.params.id, comment });
+
+    // Send in-app notification to issue author if different from commenter
+    if (issue.reportedBy && issue.reportedBy.toString() !== req.user.id) {
+      const notification = await Notification.create({
+        recipient: issue.reportedBy,
+        sender: req.user.id,
+        issue: issue._id,
+        type: 'comment',
+        title: 'New Comment on Your Issue',
+        message: `${req.user.name || 'Someone'} commented on your issue "${issue.title}"`,
+      });
+
+      emitToUser(issue.reportedBy.toString(), 'notification:new', notification);
+    }
 
     res.status(201).json({ success: true, data: comment });
   } catch (error) {

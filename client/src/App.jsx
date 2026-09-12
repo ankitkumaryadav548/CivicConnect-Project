@@ -17,6 +17,8 @@ import IssueDetail from './pages/IssueDetail';
 import MyIssues from './pages/MyIssues';
 import AdminDashboard from './pages/AdminDashboard';
 import Analytics from './pages/Analytics';
+import Leaderboard from './pages/Leaderboard';
+import { SocketProvider } from './context/SocketContext';
 import { useAuth } from './hooks/useAuth';
 
 // Protected Route Wrapper
@@ -40,44 +42,48 @@ const App = () => {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>
-          <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-300">
-            <Navbar />
-            <main className="flex-grow">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/issue/:id" element={<IssueDetail />} />
-                <Route path="/analytics" element={
-                  <ProtectedRoute adminOnly={true}>
-                    <Analytics />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/report" element={
-                  <ProtectedRoute>
-                    <ReportIssue />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/my-issues" element={
-                  <ProtectedRoute>
-                    <MyIssues />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/admin" element={
-                  <ProtectedRoute adminOnly={true}>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                } />
-              </Routes>
-            </main>
-            <Footer />
-          </div>
-          <Toaster position="top-right" />
-        </Router>
+        <SocketProvider>
+          <Router>
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-300">
+              <Navbar />
+              <main className="flex-grow">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/leaderboard" element={<Leaderboard />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/issues/:id" element={<IssueDetail />} />
+                  <Route path="/issue/:id" element={<IssueDetail />} />
+                  <Route path="/analytics" element={
+                    <ProtectedRoute adminOnly={true}>
+                      <Analytics />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/report" element={
+                    <ProtectedRoute>
+                      <ReportIssue />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/my-issues" element={
+                    <ProtectedRoute>
+                      <MyIssues />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/admin" element={
+                    <ProtectedRoute adminOnly={true}>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  } />
+                </Routes>
+              </main>
+              <Footer />
+            </div>
+            <Toaster position="top-right" />
+          </Router>
+        </SocketProvider>
       </AuthProvider>
     </ThemeProvider>
   );

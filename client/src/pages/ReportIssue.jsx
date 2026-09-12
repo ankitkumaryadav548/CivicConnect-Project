@@ -225,6 +225,7 @@ const ReportIssue = () => {
     { value: 'road', label: 'Roads & Streets', icon: '🛣️', color: 'border-violet-200 text-violet-700 bg-violet-50/50 hover:bg-violet-50' },
     { value: 'water', label: 'Water & Supply', icon: '💧', color: 'border-teal-200 text-teal-700 bg-teal-50/50 hover:bg-teal-50' },
     { value: 'electricity', label: 'Electricity', icon: '⚡', color: 'border-amber-200 text-amber-700 bg-amber-50/50 hover:bg-amber-50' },
+    { value: 'sanitation', label: 'Sanitation & Waste', icon: '🧹', color: 'border-orange-200 text-orange-700 bg-orange-50/50 hover:bg-orange-50' },
     { value: 'other', label: 'Other Concerns', icon: '🙋', color: 'border-slate-200 text-slate-700 bg-slate-50/50 hover:bg-slate-50' }
   ];
 

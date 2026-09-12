@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axios';
 import { useAuth } from '../hooks/useAuth';
+import { useSocket } from '../context/SocketContext';
 import { MapPin, Clock, ThumbsUp, Trash2, ArrowLeft, Send, MessageSquare, Navigation, Copy, RotateCcw, Layers, Lock, Wrench, CheckCircle } from 'lucide-react';
 import { StatusBadge, CategoryBadge, DepartmentBadge, SLABadge } from '../components/Badges';
 import toast from 'react-hot-toast';
@@ -64,12 +65,45 @@ const IssueDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { socket } = useSocket();
   
   const [issue, setIssue] = useState(null);
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
+
+  useEffect(() => {
+    if (!socket || !id) return;
+
+    const handleCommentCreated = ({ issueId, comment }) => {
+      if (issueId === id) {
+        setComments((prev) => [comment, ...prev]);
+      }
+    };
+
+    const handleIssueStatusUpdated = (updatedIssue) => {
+      if (updatedIssue._id === id) {
+        setIssue(updatedIssue);
+      }
+    };
+
+    const handleIssueUpvoted = ({ issueId, upvotes }) => {
+      if (issueId === id) {
+        setIssue((prev) => (prev ? { ...prev, upvotes } : prev));
+      }
+    };
+
+    socket.on('comment:created', handleCommentCreated);
+    socket.on('issue:status_updated', handleIssueStatusUpdated);
+    socket.on('issue:upvoted', handleIssueUpvoted);
+
+    return () => {
+      socket.off('comment:created', handleCommentCreated);
+      socket.off('issue:status_updated', handleIssueStatusUpdated);
+      socket.off('issue:upvoted', handleIssueUpvoted);
+    };
+  }, [socket, id]);
 
   const [tileMode, setTileMode] = useState('street'); // 'street' or 'satellite'
   const [mapCoords, setMapCoords] = useState(null); // { lat, lng, isGeocoded }

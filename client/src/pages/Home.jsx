@@ -5,6 +5,7 @@ import { IssueCardSkeleton } from '../components/Skeleton';
 import { Search, Filter, RefreshCw, LayoutGrid, Map, ShieldCheck, UserCheck, LogIn, PlusCircle } from 'lucide-react';
 import MapDashboard from '../components/MapDashboard';
 import { useAuth } from '../hooks/useAuth';
+import { useSocket } from '../context/SocketContext';
 import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
@@ -53,12 +54,46 @@ const Home = () => {
     }
   };
 
+  const { socket } = useSocket();
+
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchIssues();
     }, 300);
     return () => clearTimeout(timeoutId);
   }, [category, status, search, sort, viewMode, user]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleIssueCreated = (newIssue) => {
+      setIssues((prev) => [newIssue, ...prev]);
+    };
+
+    const handleIssueStatusUpdated = (updatedIssue) => {
+      setIssues((prev) =>
+        prev.map((item) => (item._id === updatedIssue._id ? updatedIssue : item))
+      );
+    };
+
+    const handleIssueUpvoted = ({ issueId, upvotes }) => {
+      setIssues((prev) =>
+        prev.map((item) =>
+          item._id === issueId ? { ...item, upvotes } : item
+        )
+      );
+    };
+
+    socket.on('issue:created', handleIssueCreated);
+    socket.on('issue:status_updated', handleIssueStatusUpdated);
+    socket.on('issue:upvoted', handleIssueUpvoted);
+
+    return () => {
+      socket.off('issue:created', handleIssueCreated);
+      socket.off('issue:status_updated', handleIssueStatusUpdated);
+      socket.off('issue:upvoted', handleIssueUpvoted);
+    };
+  }, [socket]);
 
   const getCategoryStyles = (cat, isActive) => {
     switch (cat.toLowerCase()) {

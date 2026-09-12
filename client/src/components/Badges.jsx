@@ -123,3 +123,39 @@ export const SLABadge = ({ slaDeadline, status, priority }) => {
     </span>
   );
 };
+
+export const CitizenBadge = ({ points = 0 }) => {
+  if (points >= 150) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200/80 dark:border-cyan-800/80 shadow-sm">
+        <span>💎 Civic Guardian</span>
+      </span>
+    );
+  } else if (points >= 75) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/80 shadow-sm">
+        <span>🥇 Community Champion</span>
+      </span>
+    );
+  } else if (points >= 25) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80 shadow-sm">
+        <span>🥈 Neighborhood Watchdog</span>
+      </span>
+    );
+  } else {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50/50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-100 dark:border-amber-900/40">
+        <span>🥉 Civic Newbie</span>
+      </span>
+    );
+  }
+};
+
+export const ImpactScoreBadge = ({ points = 0 }) => {
+  return (
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-extrabold shadow-sm">
+      <span>⭐ {points} Impact Pts</span>
+    </span>
+  );
+};

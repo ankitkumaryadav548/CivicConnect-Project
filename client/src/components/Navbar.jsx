@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
-import { LogOut, PlusCircle, LayoutDashboard, User as UserIcon, ShieldAlert, LogIn, ArrowRight, BarChart3, MessageSquare, Sun, Moon } from 'lucide-react';
+import { LogOut, PlusCircle, LayoutDashboard, User as UserIcon, ShieldAlert, LogIn, ArrowRight, BarChart3, MessageSquare, Sun, Moon, Trophy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { createPortal } from 'react-dom';
 
@@ -48,6 +48,8 @@ const themeAccents = {
     glow: 'bg-emerald-600/10'
   }
 };
+
+import NotificationCenter from './NotificationCenter';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -165,6 +167,21 @@ const Navbar = () => {
                 <Moon size={18} className="text-indigo-600 transition-transform hover:-rotate-12 duration-300" />
               )}
             </button>
+
+            {/* Notification Center Bell */}
+            {user && <NotificationCenter />}
+
+            <Link
+              to="/leaderboard"
+              className={`px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5 transition-all duration-200 ${
+                isActive('/leaderboard')
+                  ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-100/50 dark:border-amber-900/50'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+              }`}
+            >
+              <Trophy size={16} className="text-amber-500" />
+              <span className="hidden sm:inline">Leaderboard</span>
+            </Link>
 
             {user?.role === 'admin' && (
               <Link

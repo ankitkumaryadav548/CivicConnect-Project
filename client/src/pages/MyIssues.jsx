@@ -21,9 +21,11 @@ const MyIssues = () => {
   }, [user, navigate]);
 
   const fetchMyIssues = async () => {
+    if (!user) return;
     setLoading(true);
     try {
-      const res = await axiosInstance.get(`/issues?reportedBy=${user._id}&limit=100`);
+      const userId = user._id || user.id;
+      const res = await axiosInstance.get(`/issues?reportedBy=${userId}&limit=100`);
       setIssues(res.data.data);
     } catch (error) {
       console.error('Error fetching my issues:', error);
